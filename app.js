@@ -577,6 +577,7 @@ async function handleSupabaseUser(authUser) {
   if (profile) { currentUser = profile; renderHeader(); showView("home"); }
   else showView("welcome");
 }
+let sessionRestored = false;
 async function restoreSession() {
   if (DEMO) {
     const raw = localStorage.getItem("lostlink_session");
@@ -584,11 +585,26 @@ async function restoreSession() {
     showView("welcome");
     return;
   }
+  // Stay signed in: check the saved session FIRST, before deciding what to show.
+  // The old code only listened for auth events, so a returning user could land
+  // on the login screen even though a valid session was stored on this device.
+  $("loading").hidden = false;
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.user) { sessionRestored = true; await handleSupabaseUser(data.session.user); }
+  } catch (e) {}
+  // Listener only for what happens AFTER this load (sign-in / sign-out in this
+  // or another tab). The initial event is ignored when the check above already
+  // restored the session, so the home screen is not re-rendered.
   supabase.auth.onAuthStateChange(async (event, session) => {
     const user = session?.user || null;
-    if (!user) { currentUser = null; renderHeader(); showView("welcome"); return; }
+    if (event === "SIGNED_OUT" || !user) { sessionRestored = false; currentUser = null; renderHeader(); showView("welcome"); return; }
+    if (event === "INITIAL_SESSION" && sessionRestored) return;
+    sessionRestored = true;
     await handleSupabaseUser(user);
   });
+  $("loading").hidden = true;
+  if (!currentUser) showView("welcome");
 }
 async function logout() {
   if (!DEMO) { try { await supabase.auth.signOut(); } catch (e) {} }
