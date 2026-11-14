@@ -89,6 +89,7 @@ async function sendMail(to, subject, html) {
 const mailWrap = (title, body) => `<div style="font-family:Arial,sans-serif;color:#0e2455"><h2 style="color:#0e2455">${title}</h2><p>${body}</p><p style="color:#666;font-size:13px">LostLink — NCET Lost &amp; Found<br>Nagarjuna College of Engineering &amp; Technology, Devanahalli, Bengaluru</p></div>`;
 
 let currentUser = null; // {uid,email,usn,department,branchCode,year,name,mobile,role}
+let selectedPhoto = null; // the photo picked via Take Photo or Upload Photo
 let activeCategory = "All";
 let searchText = "";
 
@@ -773,7 +774,19 @@ async function boot() {
   $("upCategory").addEventListener("change", (e) => { $("upOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpCategory").addEventListener("change", (e) => { $("cpOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpFoundYesNo").addEventListener("change", (e) => { $("cpPickWrap").hidden = e.target.value !== "Yes"; });
-  $("upPhoto").addEventListener("change", async (e) => { const f = e.target.files[0]; $("upPhotoPreview").innerHTML = f ? `<p class="muted">Selected: ${esc(f.name)}</p>` : ""; });
+  // Photo: Take Photo opens the camera, Upload Photo opens the gallery/files.
+  const setPhoto = (f) => {
+    selectedPhoto = f || null;
+    $("upPhotoPreview").innerHTML = f
+      ? `<img class="item-photo" src="${URL.createObjectURL(f)}" alt="Selected photo" style="max-width:220px"><p class="muted">Selected: ${esc(f.name)}</p><p><button class="link-btn" type="button" id="removePhotoBtn">Remove photo</button></p>`
+      : "";
+    const rm = $("removePhotoBtn");
+    if (rm) rm.onclick = () => { selectedPhoto = null; $("upPhoto").value = ""; $("upPhotoCamera").value = ""; $("upPhotoPreview").innerHTML = ""; };
+  };
+  $("takePhotoBtn").onclick = () => $("upPhotoCamera").click();
+  $("uploadPhotoBtn").onclick = () => $("upPhoto").click();
+  $("upPhoto").addEventListener("change", (e) => setPhoto(e.target.files[0] || null));
+  $("upPhotoCamera").addEventListener("change", (e) => setPhoto(e.target.files[0] || null));
 
   const doGoogleLogin = async () => {
     setErr("errGoogle", "");
@@ -804,13 +817,13 @@ async function boot() {
     const cat = $("upCategory").value; const itemName = cat === "Others" ? g("upOthersName") : g("upItemName");
     if (cat === "Others" && !itemName) { setErr("errUpCategory", "Type the item name for Others."); ok = false; }
     if (!ok) return;
-    const photoFile = $("upPhoto").files[0] || null;
+    const photoFile = selectedPhoto || $("upPhoto").files[0] || $("upPhotoCamera").files[0] || null;
     const id = await DB.createFound(
       { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
       { mobile: isHod ? (currentUser.mobile || "") : g("upMobile"), description: g("upDesc") }, photoFile);
     await runMatchingForFound(id);
     $("okUpload").textContent = "Item uploaded successfully.";
-    e.target.reset(); $("upOthersWrap").hidden = true;
+    e.target.reset(); $("upOthersWrap").hidden = true; selectedPhoto = null; $("upPhotoPreview").innerHTML = "";
     setTimeout(() => showView("home"), 600);
   });
 

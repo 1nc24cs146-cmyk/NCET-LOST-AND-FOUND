@@ -136,7 +136,15 @@
         <div class="field"><label for="upPlace">Where did they find it</label><input id="upPlace" placeholder="e.g. Library, Canteen, Classroom" required><div class="error" id="errUpPlace"></div></div>
         <div class="field"><label for="upDesc">Description of the item</label><textarea id="upDesc" placeholder="Colour, brand, marks, anything that identifies it"></textarea><div class="error" id="errUpDesc"></div></div>
         <div class="field"><label for="upDept">Department to collect from</label><select id="upDept"></select><div class="error" id="errUpDept"></div></div>
-        <div class="field"><label for="upPhoto">Photo of the item (optional)</label><input id="upPhoto" type="file" accept="image/*"><div class="hint">For ID Card items: do not upload a clear photo of the full ID card — cover the number if you can.</div><div id="upPhotoPreview"></div></div>
+        <div class="field"><label>Photo of the item (optional)</label>
+          <div class="photo-btns">
+            <button class="btn btn-secondary" type="button" id="takePhotoBtn">📷 Take Photo</button>
+            <button class="btn btn-secondary" type="button" id="uploadPhotoBtn">🖼️ Upload Photo</button>
+          </div>
+          <input id="upPhoto" type="file" accept="image/*" hidden>
+          <input id="upPhotoCamera" type="file" accept="image/*" capture="environment" hidden>
+          <div class="hint">Take a photo with your camera, or upload one from your gallery. For ID Card items: do not upload a clear photo of the full ID card — cover the number if you can.</div>
+          <div id="upPhotoPreview"></div></div>
         <button class="btn btn-primary" type="submit">Upload Found Item</button>
         <div class="error" id="errUpload"></div><p class="ok" id="okUpload"></p>
       </form>

@@ -131,6 +131,10 @@ button{font:inherit;cursor:pointer}
 .role-btn{flex:1;padding:10px;border:2px solid var(--navy);border-radius:10px;background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
 .role-btn.active{background:var(--navy);color:#fff}
 
+/* ---- Photo pick buttons ---- */
+.photo-btns{display:flex;gap:8px;margin-bottom:8px}
+.photo-btns .btn{flex:1}
+
 /* ---- Welcome: auth block / signed-in block ---- */
 #welcomeAuth{margin-top:4px}
 .welcome-back-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:20px 18px;text-align:center;box-shadow:0 10px 28px rgba(14,36,85,.12)}
