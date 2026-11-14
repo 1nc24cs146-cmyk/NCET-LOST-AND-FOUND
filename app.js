@@ -385,6 +385,17 @@ function renderHeader() {
   $("topbarRight").hidden = !logged;
   $("bottomNav").hidden = !logged;
   document.body.classList.toggle("has-nav", logged);
+  // On the Welcome screen, a signed-in user sees a welcome-back card,
+  // never the Login / Create Account buttons again.
+  const wa = $("welcomeAuth"), wb = $("welcomeBack");
+  if (wa) wa.hidden = logged;
+  if (wb) {
+    wb.hidden = !logged;
+    if (logged) {
+      $("welcomeBackName").textContent = currentUser.name || "Student";
+      $("welcomeBackUsn").textContent = currentUser.usn || "";
+    }
+  }
   if (logged) {
     $("headerUsn").textContent = currentUser.usn + " • " + currentUser.department;
     const av = $("headerAvatar");
@@ -603,6 +614,8 @@ async function boot() {
   fillSelects();
   $("welcomeLoginBtn").onclick = () => { loginMode = "login"; $("loginTitle").textContent = "Login with College Email"; $("loginSubmit").textContent = "Login"; showView("login"); };
   $("welcomeCreateBtn").onclick = () => { loginMode = "signup"; $("loginTitle").textContent = "Create Account"; $("loginSubmit").textContent = "Create Account"; showView("login"); };
+  $("welcomeHomeBtn").onclick = () => showView("home");
+  $("welcomeUploadBtn").onclick = () => showView("upload");
   $("toggleModeBtn").onclick = () => { loginMode = loginMode === "login" ? "signup" : "login"; $("loginTitle").textContent = loginMode === "login" ? "Login with College Email" : "Create Account"; $("loginSubmit").textContent = loginMode === "login" ? "Login" : "Create Account"; };
   $("logoutBtn").onclick = logout; $("profileLogoutBtn").onclick = logout;
   $("headerAvatar").onclick = (e) => { e.preventDefault(); showView("profile"); };

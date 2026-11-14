@@ -52,12 +52,24 @@
       </div>
       <div class="motto">Innovate. Ignite. Inspire. &nbsp;|&nbsp; Est. 2001 &nbsp;|&nbsp; 25+ Years of Excellence &nbsp;|&nbsp; Devanahalli, Bengaluru</div>
     </div>
-    <button class="btn btn-primary" id="welcomeLoginBtn" type="button">Login with College Email</button>
-    <p style="height:12px"></p>
-    <button class="btn btn-secondary" id="welcomeCreateBtn" type="button" style="width:100%">Create Account</button>
-    <p style="height:12px"></p>
-    <button class="btn btn-google" id="welcomeGoogleBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
-    <p class="muted" style="text-align:center;margin-top:12px">Only for NCET students.</p>
+    <div id="welcomeAuth">
+      <button class="btn btn-primary" id="welcomeLoginBtn" type="button">Login with College Email</button>
+      <p style="height:12px"></p>
+      <button class="btn btn-secondary" id="welcomeCreateBtn" type="button" style="width:100%">Create Account</button>
+      <p style="height:12px"></p>
+      <button class="btn btn-google" id="welcomeGoogleBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
+      <p class="muted" style="text-align:center;margin-top:12px">Only for NCET students.</p>
+    </div>
+    <div id="welcomeBack" hidden>
+      <div class="welcome-back-card">
+        <p class="welcome-back-name">Welcome back, <b id="welcomeBackName"></b> 👋</p>
+        <p class="muted">You&rsquo;re signed in as <b id="welcomeBackUsn"></b>. Jump straight back in.</p>
+        <div class="welcome-back-btns">
+          <button class="btn btn-primary" id="welcomeHomeBtn" type="button">Open My Dashboard</button>
+          <button class="btn btn-secondary" id="welcomeUploadBtn" type="button">Upload Found Item</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- 1 LOGIN -->
