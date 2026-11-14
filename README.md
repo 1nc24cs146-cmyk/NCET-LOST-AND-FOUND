@@ -191,8 +191,8 @@ Demo flow to try: Create an account with your own NCET mail → Upload a found i
 
 ## 🔧 Troubleshooting
 
-- **"User already registered"** — the account already exists in Supabase. Use Login, not Create Account, with the password you set.
-- **"Invalid login credentials"** — wrong password for that USN email. Use Forgot Password, or sign in with **Continue with NCET Mail**.
+- **"User already registered"** — the account already exists in Supabase. Students sign in with **Continue with NCET Mail** (Gmail only, no password); HODs sign in with their department password.
+- **"Invalid login credentials"** — wrong password for an HOD account. Check the department and password, or sign in again with the right HOD login.
 - **Google login lands on the other site** — the redirect list in Supabase must contain the exact URL you started from (see step 4 above). The app always asks to return to `…/index.html`, which is in the list on every host.
 - **Login asked again after closing the app** — the session is remembered per site. If you logged in on GitHub Pages and open the Render link, that is a different site and asks again. Use one link — Render — as the main one.
 - **Photo does not upload** — the `item-photos` bucket must be Public, with the view + upload policies from `supabase-schema.sql`. The item still saves without a photo if upload fails.
@@ -200,7 +200,11 @@ Demo flow to try: Create an account with your own NCET mail → Upload a found i
 
 ## 📄 Disclosure (INNOVATE 2.0 rules)
 
-A 50% prototype of NCET Lost & Found was built on 13 Nov 2026 (home page, board with Lost/Found/Returned tabs, posting lost/found items, match suggestions, claim flow). This build extends that pre-existing prototype with the full Supabase backend, Welcome screen, strict USN-email login, Profile page, privacy rules, WhatsApp handover, Delivered status and feedback. Significant parts were written with AI assistance. All data in the demo is dummy / anonymised — no real student data is used.
+- **Pre-existing code:** a 50% prototype of NCET Lost & Found was built on 13 Nov 2026 (home page, board with Lost/Found/Returned tabs, posting lost/found items, match suggestions, claim flow). This build extends that pre-existing prototype with the full Supabase backend, Welcome screen, strict USN-email login, Profile page, privacy rules, WhatsApp handover, Delivered status, feedback, HOD login with accept/reject, Gmail-only student login, Take Photo / Upload Photo, complaint counts per item, and owner-only matches.
+- **Libraries / APIs / services:** Supabase (Auth, Postgres, Storage) via the `@supabase/supabase-js` client library; Brevo transactional email API (4 mails: complaint, match, confirm, delivered); Google OAuth (Continue with NCET Mail); hosting on Render + GitHub Pages.
+- **Images:** the NCET logo and the campus gate photo come from the college's own website (ncet.co.in); the app screenshots are our own.
+- **AI assistance:** significant parts of the code and this README were written with AI assistance (Muse), and all of it was checked and tested by the team.
+- **Data:** all data in the demo is dummy / anonymised — no real student data is used.
 
 ---
 
