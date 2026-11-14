@@ -7,6 +7,20 @@ import { supabase, isSupabaseConfigured, uploadPhotoToSupabase, BREVO_API_KEY, B
 export const BRANCHES = { cs:"CSE", is:"ISE", cd:"Data Science", ci:"AIML", ec:"ECE", cv:"Civil", ic:"IoT / Cyber Security" };
 export const BRANCH_LABEL = { cs:"CSE (CS)", is:"ISE (IS)", cd:"Data Science (CD)", ci:"AIML (CI)", ec:"ECE (EC)", cv:"Civil (CV)", ic:"IoT / Cyber Security (IC)" };
 export const EMAIL_RE = /^1nc[0-9]{2}(cs|is|cd|ci|ec|cv|ic)[0-9]{3}@ncetmail\.com$/;
+/* ---------- HOD logins ---------- */
+// Workers who find an item have no login — they hand it to the department, and
+// the HOD posts it from a separate department login: hod-<branch>@ncetmail.com
+// (e.g. hod-cs@ncetmail.com). The HOD then accepts or rejects claims for
+// their department's items from their Profile.
+export const HOD_EMAIL_RE = /^hod-(cs|is|cd|ci|ec|cv|ic)@ncetmail\.com$/;
+export function hodFromEmail(email) {
+  const m = (email || "").trim().toLowerCase().match(HOD_EMAIL_RE);
+  if (!m) return null;
+  const branchCode = m[1];
+  return { branchCode, department: BRANCHES[branchCode], usn: "HOD-" + branchCode.toUpperCase(), email: "hod-" + branchCode + "@ncetmail.com" };
+}
+export const isHodEmail = (email) => !!hodFromEmail(email);
+const HOD_COLLECT_DEPT = { cs:"CSE", is:"ISE", cd:"CSE (Data Science)", ci:"CSE (AI/ML)", ec:"ECE", cv:"Civil", ic:"CSE (IoT & Cyber Security)" };
 export const CATEGORIES = ["Charger","Adapter","ID Card","Books","Laptop Charger","Laptop","Sports Item","Others"];
 export const COLLECT_DEPTS = ["CSE","CSE (AI/ML)","ECE","ISE","CSE (Data Science)","Civil","CSE (IoT & Cyber Security)","BCA","MBA","MCA"];
 
@@ -89,7 +103,7 @@ const toSnakePatch = (patch) => {
   for (const k of Object.keys(patch)) if (map[k] !== undefined) out[map[k]] = patch[k];
   return out;
 };
-const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: r.name || "", mobile: r.mobile || "" } : null;
+const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: r.name || "", mobile: r.mobile || "", role: isHodEmail(r.email) ? "hod" : "student" } : null;
 const mapFound = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, placeFound: r.place_found, dateFound: r.date_found || "", collectDept: r.collect_dept, status: r.status, photoUrl: r.photo_url || "", finderUsn: r.finder_usn, finderName: r.finder_name || "", uploaderName: r.uploader_name || "", uploaderUid: r.uploader_uid });
 const mapComplaint = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, ownerUsn: r.owner_usn, ownerUid: r.owner_uid, foundItemId: r.found_item_id, matchStatus: r.match_status, itemStatus: r.item_status, date: (r.created_at || "").slice(0, 10) });
 const mapMatch = (r) => ({ id: r.id, complaintId: r.complaint_id, foundItemId: r.found_item_id, ownerUid: r.owner_uid, ownerUsn: r.owner_usn, finderUid: r.finder_uid, finderUsn: r.finder_usn, status: r.status });
@@ -104,9 +118,10 @@ const DB = {
         // Profile row missing (e.g. created before the users table existed):
         // rebuild it from the auth metadata saved at sign-up.
         const meta = data.user.user_metadata || {};
-        const v = validateCollegeEmailAndUsn(email, usn);
-        if (!v.ok) throw new Error("Profile not found. Please create an account first.");
-        const row = { id: data.user.id, email, usn, department: v.department, branch_code: v.branchCode, year: v.year, name: meta.full_name || meta.name || "", mobile: "" };
+        const hod = hodFromEmail(email);
+        const row = hod
+          ? { id: data.user.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: "HOD — " + hod.department, mobile: "" }
+          : (() => { const v = validateCollegeEmailAndUsn(email, usn); if (!v.ok) throw new Error("Profile not found. Please create an account first."); return { id: data.user.id, email, usn, department: v.department, branch_code: v.branchCode, year: v.year, name: meta.full_name || meta.name || "", mobile: "" }; })();
         const { error: ierr } = await supabase.from("users").insert(row);
         if (ierr) throw new Error("Profile not found. Please create an account first.");
         profile = mapProfile(row);
@@ -371,9 +386,17 @@ const views = ["welcome","login","home","upload","complaint","matches","profile"
 function showView(name) {
   // Nothing works until the user is logged in — no demo logins, no guest access.
   if (!currentUser && name !== "welcome" && name !== "login") name = "welcome";
+  if (currentUser?.role === "hod" && name === "complaint") name = "home"; // HODs post found items; they never raise complaints
   views.forEach((v) => $("view-" + v).classList.toggle("active", v === name));
   document.querySelectorAll("#bottomNav button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
+  if (name === "upload" && currentUser?.role === "hod") {
+    // HOD uploads as the department, not as a student.
+    $("upFinder").value = "HOD, " + currentUser.department + " Dept";
+    $("upUploader").value = "HOD, " + currentUser.department + " Dept";
+    $("upFinderUsn").value = currentUser.usn;
+    $("upDept").value = HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department;
+  }
   if (name === "home") renderHome();
   if (name === "matches") renderMatches();
   if (name === "profile") renderProfile();
@@ -385,6 +408,9 @@ function renderHeader() {
   $("topbarRight").hidden = !logged;
   $("bottomNav").hidden = !logged;
   document.body.classList.toggle("has-nav", logged);
+  // HODs never raise complaints — hide the Lost tab for them.
+  const lostBtn = document.querySelector('#bottomNav button[data-view="complaint"]');
+  if (lostBtn) lostBtn.hidden = logged && currentUser?.role === "hod";
   // On the Welcome screen, a signed-in user sees a welcome-back card,
   // never the Login / Create Account buttons again.
   const wa = $("welcomeAuth"), wb = $("welcomeBack");
@@ -479,21 +505,34 @@ async function renderMatches() {
         html += `<div class="card" style="background:var(--page)"><b>WhatsApp message (preview)</b><p style="white-space:pre-line">${esc(text)}</p>
           ${otherMobile ? `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" href="https://wa.me/91${otherMobile}?text=${encodeURIComponent(text)}">Message on WhatsApp</a>` : `<p class="note">The other person's number will appear here once both sides have saved it.</p>`}</div>`;
         if (isOwner && f.status !== "Delivered to Owner")
-          html += `<button class="btn btn-primary" id="got-${m.id}">I received my item</button>`;
+          html += (f.finderUsn || "").startsWith("HOD-")
+            ? `<p class="note">Confirmed — waiting for the HOD of the ${esc(f.collectDept || "")} department to accept the handover.</p>`
+            : `<button class="btn btn-primary" id="got-${m.id}">I received my item</button>`;
         if (f.status === "Delivered to Owner") html += `<p class="ok">✓ Delivered to Owner</p>` + feedbackFormHtml(m, f, feedback);
       }
       card.innerHTML = html; wrap.appendChild(card);
       const yes = $("yes-" + m.id), no = $("no-" + m.id);
       if (yes) yes.onclick = async () => {
         if (!$("confirm-" + m.id).checked) { setErr("err-" + m.id, "Please tick the confirmation line first."); return; }
+        const isHodItem = (f.finderUsn || "").startsWith("HOD-");
         await DB.updateMatch(m.id, { status: "Confirmed", confirmedAt: Date.now() });
-        // Owner accepting the match marks the item Delivered to Owner straight away.
-        await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
-        await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
-        sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-          mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
-        sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
-          mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
+        if (isHodItem) {
+          // Department-held item: the owner confirmed, but it is Delivered only
+          // once the HOD accepts the claim in their Profile.
+          await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
+          sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
+            mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.`));
+          sendMail(usnToEmail(m.finderUsn), "LostLink: a student confirmed your department item",
+            mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.`));
+        } else {
+          // Owner accepting the match marks the item Delivered to Owner straight away.
+          await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
+          await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
+          sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
+            mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
+          sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
+            mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
+        }
         renderMatches(); renderHome();
       };
       if (no) no.onclick = async () => { await DB.updateMatch(m.id, { status: "Rejected" }); await DB.updateComplaint(m.complaintId, { matchStatus: "Waiting for Match" }); renderMatches(); };
@@ -541,13 +580,48 @@ async function renderProfile() {
   $("profileAvatar").textContent = (u.name || u.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   $("profileName").textContent = u.name || "Not added yet — tap Edit Profile";
   $("profileSub").textContent = `${u.usn} • ${u.department} (${u.branchCode.toUpperCase()})`;
-  $("profileDetails").innerHTML = `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
+  $("profileDetails").innerHTML = u.role === "hod"
+    ? `<p><b>Role:</b> HOD — ${esc(u.department)} Department</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
+    : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
   $("pfName").value = u.name || ""; $("pfMobile").value = u.mobile || "";
   const found = await DB.listFoundPublic();
   const mine = found.filter((x) => x.uploaderUid === u.uid);
   const complaints = await DB.listMyComplaints(u.uid);
   const delivered = mine.filter((x) => x.status === "Delivered to Owner").length + complaints.filter((c) => c.itemStatus === "Delivered to Owner").length;
   $("countFound").textContent = mine.length; $("countLost").textContent = complaints.length; $("countDelivered").textContent = delivered;
+  // HOD approvals: claims the owner already confirmed for this department's
+  // items. The HOD accepts (→ Delivered to Owner) or rejects (→ matching again).
+  const hodBox = $("hodApprovals");
+  if (hodBox) {
+    if (u.role !== "hod") { hodBox.hidden = true; hodBox.innerHTML = ""; }
+    else {
+      hodBox.hidden = false;
+      const allMatches = await DB.listAllMatches();
+      const pending = allMatches.filter((m) => m.status === "Confirmed" && m.finderUid === u.uid && (found.find((x) => x.id === m.foundItemId)?.status !== "Delivered to Owner"));
+      hodBox.innerHTML = `<h3>Claims waiting for your approval</h3>` + (pending.length ? pending.map((m) => {
+        const f = found.find((x) => x.id === m.foundItemId) || {};
+        return `<div class="card" style="margin-top:10px"><p class="item-title">${esc(f.itemName || "Item")}</p><p class="item-meta">${esc(f.category || "")} • Claimed by ${esc(m.ownerUsn)} • Found at ${esc(f.placeFound || "")}</p>${f.photoUrl ? `<img class="item-photo" src="${esc(f.photoUrl)}" alt="${esc(f.itemName || "")}">` : ""}<p><button class="btn btn-primary btn-small" data-hod-accept="${m.id}">Accept — hand it over</button> <button class="btn btn-secondary btn-small" data-hod-reject="${m.id}">Reject</button></p></div>`;
+      }).join("") : `<p class="muted">No claims waiting for approval.</p>`);
+      hodBox.querySelectorAll("[data-hod-accept]").forEach((b) => b.onclick = async () => {
+        const m = pending.find((x) => x.id === b.dataset.hodAccept);
+        const f = found.find((x) => x.id === m.foundItemId) || {};
+        await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
+        await DB.updateComplaint(m.complaintId, { itemStatus: "Delivered to Owner", matchStatus: "Confirmed" });
+        sendMail(usnToEmail(m.ownerUsn), "LostLink: HOD accepted — your item is delivered",
+          mailWrap("Delivered to Owner", `The HOD of the ${esc(f.collectDept || "")} department accepted your claim for <b>${esc(f.itemName || "your item")}</b>. It is now marked <b>Delivered to Owner</b> — please collect it from the department.`));
+        renderProfile(); renderHome();
+      });
+      hodBox.querySelectorAll("[data-hod-reject]").forEach((b) => b.onclick = async () => {
+        const m = pending.find((x) => x.id === b.dataset.hodReject);
+        const f = found.find((x) => x.id === m.foundItemId) || {};
+        await DB.updateMatch(m.id, { status: "Rejected" });
+        await DB.updateComplaint(m.complaintId, { matchStatus: "Waiting for Match" });
+        sendMail(usnToEmail(m.ownerUsn), "LostLink: your claim was not accepted",
+          mailWrap("Claim not accepted", `The HOD did not accept your claim for <b>${esc(f.itemName || "the item")}</b>. Your complaint is open again and matching continues.`));
+        renderProfile(); renderHome();
+      });
+    }
+  }
 }
 
 /* ---------- Auth / session ---------- */
@@ -560,6 +634,19 @@ async function setSession(user) {
 async function handleSupabaseUser(authUser) {
   const email = (authUser.email || "").trim().toLowerCase();
   const usn = email.split("@")[0].toUpperCase();
+  // HOD login: hod-<branch>@ncetmail.com — no USN rule, department from the email.
+  const hod = hodFromEmail(email);
+  if (hod) {
+    let profile = await DB.getProfile(authUser.id);
+    if (!profile) {
+      const row = { id: authUser.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: "HOD — " + hod.department, mobile: "" };
+      const { error } = await supabase.from("users").insert(row);
+      profile = error ? mapProfile(row) : (await DB.getProfile(authUser.id)) || mapProfile(row);
+    }
+    if (profile) { currentUser = profile; renderHeader(); showView("home"); }
+    else showView("welcome");
+    return;
+  }
   const v = validateCollegeEmailAndUsn(email, usn);
   if (!v.ok) {
     await supabase.auth.signOut();
@@ -630,6 +717,27 @@ async function boot() {
   fillSelects();
   $("welcomeLoginBtn").onclick = () => { loginMode = "login"; $("loginTitle").textContent = "Login with College Email"; $("loginSubmit").textContent = "Login"; showView("login"); };
   $("welcomeCreateBtn").onclick = () => { loginMode = "signup"; $("loginTitle").textContent = "Create Account"; $("loginSubmit").textContent = "Create Account"; showView("login"); };
+  // Student / HOD login toggle — HODs log in with department + password.
+  let loginRole = "student";
+  const setLoginRole = (role) => {
+    loginRole = role;
+    $("roleStudentBtn").classList.toggle("active", role === "student");
+    $("roleHodBtn").classList.toggle("active", role === "hod");
+    $("studentLoginBlock").hidden = role !== "student";
+    $("hodLoginFields").hidden = role !== "hod";
+    $("loginTitle").textContent = role === "hod" ? "HOD Login" : (loginMode === "login" ? "Login with College Email" : "Create Account");
+  };
+  $("roleStudentBtn").onclick = () => setLoginRole("student");
+  $("roleHodBtn").onclick = () => setLoginRole("hod");
+  $("hodLoginBtn").onclick = async () => {
+    setErr("errHodLogin", ""); setErr("errHodPassword", "");
+    const code = $("hodDept").value; const pw = $("hodPassword").value;
+    if (!pw || pw.length < 6) { setErr("errHodPassword", "Password is required, minimum 6 characters."); return; }
+    try {
+      const user = await DB.signIn("hod-" + code + "@ncetmail.com", "HOD-" + code.toUpperCase(), pw);
+      await setSession(user);
+    } catch (err) { setErr("errHodLogin", err.message || "HOD login failed. Please try again."); }
+  };
   $("welcomeHomeBtn").onclick = () => showView("home");
   $("welcomeUploadBtn").onclick = () => showView("upload");
   $("toggleModeBtn").onclick = () => { loginMode = loginMode === "login" ? "signup" : "login"; $("loginTitle").textContent = loginMode === "login" ? "Login with College Email" : "Create Account"; $("loginSubmit").textContent = loginMode === "login" ? "Login" : "Create Account"; };
@@ -673,18 +781,24 @@ async function boot() {
     e.preventDefault(); setErr("errUpload",""); $("okUpload").textContent = "";
     const g = (id) => $(id).value.trim();
     let ok = true;
-    const need = [["upUploader","errUpUploader","Uploader name is required."],["upFinder","errUpFinder","Finder name is required."],["upItemName","errUpItemName","Item name is required."],["upPlace","errUpPlace","Place is required."],["upDesc","errUpDesc","Description is required."]];
+    // HOD uploads as the department — no student finder name/USN/mobile needed.
+    const isHod = currentUser?.role === "hod";
+    const need = isHod
+      ? [["upItemName","errUpItemName","Item name is required."],["upPlace","errUpPlace","Place is required."],["upDesc","errUpDesc","Description is required."]]
+      : [["upUploader","errUpUploader","Uploader name is required."],["upFinder","errUpFinder","Finder name is required."],["upItemName","errUpItemName","Item name is required."],["upPlace","errUpPlace","Place is required."],["upDesc","errUpDesc","Description is required."]];
     need.forEach(([f, err, msg]) => { setErr(err, ""); if (!g(f)) { setErr(err, msg); ok = false; } });
-    if (!isMobile(g("upMobile"))) { setErr("errUpMobile", "Mobile number must be exactly 10 digits."); ok = false; } else setErr("errUpMobile","");
-    const finderUsn = g("upFinderUsn").toUpperCase();
-    if (!/^1NC[0-9]{2}(CS|IS|CD|CI|EC|CV|IC)[0-9]{3}$/.test(finderUsn)) { setErr("errUpFinderUsn", "Enter a valid USN, e.g. 1NC24CS146."); ok = false; } else setErr("errUpFinderUsn","");
+    const finderUsn = isHod ? currentUser.usn : g("upFinderUsn").toUpperCase();
+    if (!isHod) {
+      if (!isMobile(g("upMobile"))) { setErr("errUpMobile", "Mobile number must be exactly 10 digits."); ok = false; } else setErr("errUpMobile","");
+      if (!/^1NC[0-9]{2}(CS|IS|CD|CI|EC|CV|IC)[0-9]{3}$/.test(finderUsn)) { setErr("errUpFinderUsn", "Enter a valid USN, e.g. 1NC24CS146."); ok = false; } else setErr("errUpFinderUsn","");
+    } else { setErr("errUpMobile",""); setErr("errUpFinderUsn",""); }
     const cat = $("upCategory").value; const itemName = cat === "Others" ? g("upOthersName") : g("upItemName");
     if (cat === "Others" && !itemName) { setErr("errUpCategory", "Type the item name for Others."); ok = false; }
     if (!ok) return;
     const photoFile = $("upPhoto").files[0] || null;
     const id = await DB.createFound(
-      { itemName, category: cat, placeFound: g("upPlace"), collectDept: $("upDept").value, status: "Pending", finderUsn, finderName: g("upFinder"), uploaderName: g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
-      { mobile: g("upMobile"), description: g("upDesc") }, photoFile);
+      { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
+      { mobile: isHod ? (currentUser.mobile || "") : g("upMobile"), description: g("upDesc") }, photoFile);
     await runMatchingForFound(id);
     $("okUpload").textContent = "Item uploaded successfully.";
     e.target.reset(); $("upOthersWrap").hidden = true;

@@ -76,6 +76,11 @@
   <section class="view" id="view-login">
     <div class="card">
       <h2 id="loginTitle">Login with College Email</h2>
+      <div class="role-toggle">
+        <button type="button" id="roleStudentBtn" class="role-btn active">🎓 Student</button>
+        <button type="button" id="roleHodBtn" class="role-btn">🏛️ HOD</button>
+      </div>
+      <div id="studentLoginBlock">
       <button class="btn btn-google" id="googleLoginBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
       <div class="error" id="errGoogle"></div>
       <p class="muted" style="text-align:center;margin:8px 0 4px">Sign in directly with your NCET Google account — no password needed. Only USN emails like 1nc24cs146@ncetmail.com are accepted.</p>
@@ -96,6 +101,25 @@
         <p class="muted" style="margin-top:12px">Only NCET students can log in — use your USN college email (example: 1nc24cs146@ncetmail.com) and the USN that matches it.</p>
         <p><button class="link-btn" type="button" id="toggleModeBtn" style="color:var(--navy)">New student? Create account</button></p>
       </form>
+      </div>
+      <div id="hodLoginFields" hidden>
+        <p class="muted" style="text-align:center">For department HODs only — workers hand found items to the department, and the HOD posts them here.</p>
+        <div class="field"><label for="hodDept">Department</label>
+          <select id="hodDept">
+            <option value="cs">CSE</option>
+            <option value="is">ISE</option>
+            <option value="cd">Data Science</option>
+            <option value="ci">AIML</option>
+            <option value="ec">ECE</option>
+            <option value="cv">Civil</option>
+            <option value="ic">IoT / Cyber Security</option>
+          </select></div>
+        <div class="field"><label for="hodPassword">HOD Password</label>
+          <input id="hodPassword" type="password" placeholder="HOD password" autocomplete="current-password">
+          <div class="error" id="errHodPassword"></div></div>
+        <button class="btn btn-primary" type="button" id="hodLoginBtn">Login as HOD</button>
+        <div class="error" id="errHodLogin"></div>
+      </div>
     </div>
   </section>
 
@@ -181,6 +205,7 @@
       <div class="card"><b id="countLost">0</b>Lost</div>
       <div class="card"><b id="countDelivered">0</b>Returned / Delivered</div>
     </div>
+    <div class="card" id="hodApprovals" hidden></div>
     <div class="card"><h3>Edit Profile</h3>
       <form id="profileForm" novalidate>
         <div class="field"><label for="pfName">Full name</label><input id="pfName"><div class="error" id="errPfName"></div></div>
