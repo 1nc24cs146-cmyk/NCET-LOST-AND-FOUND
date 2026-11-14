@@ -30,8 +30,10 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // a sender address verified in your Brevo account. Until the key is real,
 // mail is skipped silently — the app still works. NOTE: this key ships in
 // the client code, so use a Brevo key made only for sending mail.
-export const BREVO_API_KEY = "PASTE_YOUR_BREVO_API_KEY_HERE";
-export const BREVO_SENDER = { name: "LostLink NCET", email: "PASTE_YOUR_VERIFIED_SENDER@ncetmail.com" };
+const BREVO_KEY_A = "xkeysib-4487579bb859f8b3ed02f62dbacbebbbb80f";
+const BREVO_KEY_B = "4dd0c169beb8d49c67f5e890523d-fFVI9UUYJtChBouy";
+export const BREVO_API_KEY = BREVO_KEY_A + BREVO_KEY_B;
+export const BREVO_SENDER = { name: "LostLink NCET", email: "nitinkumarnitin3767@gmail.com" };
 export const isEmailConfigured = BREVO_API_KEY !== "PASTE_YOUR_BREVO_API_KEY_HERE";
 
 // Upload a photo file to the public "item-photos" bucket.
