@@ -88,8 +88,7 @@ async function sendMail(to, subject, html) {
 }
 const mailWrap = (title, body) => `<div style="font-family:Arial,sans-serif;color:#0e2455"><h2 style="color:#0e2455">${title}</h2><p>${body}</p><p style="color:#666;font-size:13px">LostLink — NCET Lost &amp; Found<br>Nagarjuna College of Engineering &amp; Technology, Devanahalli, Bengaluru</p></div>`;
 
-let currentUser = null; // {uid,email,usn,department,branchCode,year,name,mobile}
-let loginMode = "login";
+let currentUser = null; // {uid,email,usn,department,branchCode,year,name,mobile,role}
 let activeCategory = "All";
 let searchText = "";
 
@@ -740,9 +739,8 @@ async function boot() {
     banner.textContent = "Demo Mode — Supabase not connected yet. Dummy data only. Paste your Supabase URL and anon key in supabase.js to go live.";
   } else { banner.hidden = true; }
   fillSelects();
-  $("welcomeLoginBtn").onclick = () => { loginMode = "login"; $("loginTitle").textContent = "Login with College Email"; $("loginSubmit").textContent = "Login"; showView("login"); };
-  $("welcomeCreateBtn").onclick = () => { loginMode = "signup"; $("loginTitle").textContent = "Create Account"; $("loginSubmit").textContent = "Create Account"; showView("login"); };
-  // Student / HOD login toggle — HODs log in with department + password.
+  $("welcomeLoginBtn").onclick = () => { $("loginTitle").textContent = "Login with College Email"; showView("login"); };
+  // Student / HOD login toggle — students sign in only with Gmail, HODs with a password.
   let loginRole = "student";
   const setLoginRole = (role) => {
     loginRole = role;
@@ -750,7 +748,7 @@ async function boot() {
     $("roleHodBtn").classList.toggle("active", role === "hod");
     $("studentLoginBlock").hidden = role !== "student";
     $("hodLoginFields").hidden = role !== "hod";
-    $("loginTitle").textContent = role === "hod" ? "HOD Login" : (loginMode === "login" ? "Login with College Email" : "Create Account");
+    $("loginTitle").textContent = role === "hod" ? "HOD Login" : "Login with College Email";
   };
   $("roleStudentBtn").onclick = () => setLoginRole("student");
   $("roleHodBtn").onclick = () => setLoginRole("hod");
@@ -765,31 +763,17 @@ async function boot() {
   };
   $("welcomeHomeBtn").onclick = () => showView("home");
   $("welcomeUploadBtn").onclick = () => showView("upload");
-  $("toggleModeBtn").onclick = () => { loginMode = loginMode === "login" ? "signup" : "login"; $("loginTitle").textContent = loginMode === "login" ? "Login with College Email" : "Create Account"; $("loginSubmit").textContent = loginMode === "login" ? "Login" : "Create Account"; };
   $("logoutBtn").onclick = logout; $("profileLogoutBtn").onclick = logout;
   $("headerAvatar").onclick = (e) => { e.preventDefault(); showView("profile"); };
   $("goUploadBtn").onclick = () => showView("upload");
   $("goComplaintBtn").onclick = () => showView("complaint");
   $("searchBox").addEventListener("input", (e) => { searchText = e.target.value; renderHome(); });
-  $("loginUsn").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
   $("upFinderUsn").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
   $("cpUsn").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
   $("upCategory").addEventListener("change", (e) => { $("upOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpCategory").addEventListener("change", (e) => { $("cpOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpFoundYesNo").addEventListener("change", (e) => { $("cpPickWrap").hidden = e.target.value !== "Yes"; });
   $("upPhoto").addEventListener("change", async (e) => { const f = e.target.files[0]; $("upPhotoPreview").innerHTML = f ? `<p class="muted">Selected: ${esc(f.name)}</p>` : ""; });
-
-  $("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault(); ["errEmail","errUsn","errPassword","errLogin"].forEach((i) => setErr(i, ""));
-    const email = $("loginEmail").value, usn = $("loginUsn").value, pw = $("loginPassword").value;
-    const v = validateCollegeEmailAndUsn(email, usn);
-    if (!v.ok) { setErr(v.field === "email" ? "errEmail" : "errUsn", v.error); return; }
-    if (!pw || pw.length < 6) { setErr("errPassword", "Password is required, minimum 6 characters."); return; }
-    try {
-      const user = loginMode === "login" ? await DB.signIn(v.email, v.usn, pw) : await DB.signUp(v.email, v.usn, pw, v);
-      await setSession(user);
-    } catch (err) { setErr("errLogin", err.message || "Login failed. Please try again."); }
-  });
 
   const doGoogleLogin = async () => {
     setErr("errGoogle", "");

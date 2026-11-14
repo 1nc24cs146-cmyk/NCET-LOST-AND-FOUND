@@ -55,8 +55,6 @@
     <div id="welcomeAuth">
       <button class="btn btn-primary" id="welcomeLoginBtn" type="button">Login with College Email</button>
       <p style="height:12px"></p>
-      <button class="btn btn-secondary" id="welcomeCreateBtn" type="button" style="width:100%">Create Account</button>
-      <p style="height:12px"></p>
       <button class="btn btn-google" id="welcomeGoogleBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
       <p class="muted" style="text-align:center;margin-top:12px">Only for NCET students.</p>
     </div>
@@ -83,24 +81,7 @@
       <div id="studentLoginBlock">
       <button class="btn btn-google" id="googleLoginBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
       <div class="error" id="errGoogle"></div>
-      <p class="muted" style="text-align:center;margin:8px 0 4px">Sign in directly with your NCET Google account — no password needed. Only USN emails like 1nc24cs146@ncetmail.com are accepted.</p>
-      <div class="divider"><span>or login with password</span></div>
-      <form id="loginForm" novalidate>
-        <div class="field"><label for="loginEmail">College Email</label>
-          <input id="loginEmail" type="email" placeholder="1nc24cs146@ncetmail.com" autocomplete="username">
-          <div class="hint">Use your USN email — example: 1nc24cs146@ncetmail.com</div>
-          <div class="error" id="errEmail"></div></div>
-        <div class="field"><label for="loginUsn">College USN</label>
-          <input id="loginUsn" type="text" placeholder="1NC24CS146" autocomplete="off" style="text-transform:uppercase">
-          <div class="error" id="errUsn"></div></div>
-        <div class="field"><label for="loginPassword">Password</label>
-          <input id="loginPassword" type="password" placeholder="Minimum 6 characters" autocomplete="current-password">
-          <div class="error" id="errPassword"></div></div>
-        <button class="btn btn-primary" type="submit" id="loginSubmit">Login</button>
-        <div class="error" id="errLogin"></div>
-        <p class="muted" style="margin-top:12px">Only NCET students can log in — use your USN college email (example: 1nc24cs146@ncetmail.com) and the USN that matches it.</p>
-        <p><button class="link-btn" type="button" id="toggleModeBtn" style="color:var(--navy)">New student? Create account</button></p>
-      </form>
+      <p class="muted" style="text-align:center;margin:8px 0 4px">Students sign in only with their NCET Gmail — tap the button and pick your NCET Google account. No password, no separate account to create. Only USN emails like 1nc24cs146@ncetmail.com are accepted.</p>
       </div>
       <div id="hodLoginFields" hidden>
         <p class="muted" style="text-align:center">For department HODs only — workers hand found items to the department, and the HOD posts them here.</p>
