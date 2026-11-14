@@ -67,13 +67,16 @@ That's it. No install, no extra app.
 
 ## ⚙️ How it works
 
-1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table.
+1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo — tap **Take Photo** to use the phone camera or **Upload Photo** to pick one from the gallery, with a preview before posting. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table.
 2. **An owner raises a complaint.** Item name, category, and a description only the owner can see. The owner gets an email the moment the complaint is raised.
 3. **The app matches them.** Same item name + category, or a close description match, creates a Possible Match — visible only to that owner, with the finder's photo. Both sides get an email.
-4. **The owner confirms.** Tick the line, tap **Yes, this is my item**. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Tap **No, this is not mine** and the match is rejected.
+4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Tap **No, this is not mine** and the match is rejected.
 5. **Feedback.** After delivery, the owner can rate the return and say how it went.
 
 ## 🔐 Login — college email only
+
+- **Students log in only with Gmail.** Tap **Continue with NCET Mail** and pick your NCET Google account — no password, no Create Account form. The returned email is still checked with the strict USN rule below; a non-USN or non-ncetmail account is signed out again and rejected.
+- **HODs log in with a password** — see the HOD login section below.
 
 Only USN-format college emails are accepted, checked **before** Supabase is called:
 
@@ -94,9 +97,7 @@ Only USN-format college emails are accepted, checked **before** Supabase is call
 | IC | IoT / Cyber Security |
 
 - USN must match the email prefix: `1NC24CS146` = `1nc24cs146@ncetmail.com`.
-- `nitin@ncetmail.com` and Gmail are rejected. Department is auto-derived from the branch code, never picked.
-
-**Direct login with NCET Mail.** The **Continue with NCET Mail** button (on Welcome and on Login) uses Supabase Google OAuth (`hd: ncetmail.com`) — pick your NCET Google account, no password needed. The returned email is still checked with the strict USN rule; a non-USN or non-ncetmail account is signed out again and rejected.
+- `nitin@ncetmail.com` and personal Gmail are rejected. Department is auto-derived from the branch code, never picked.
 
 ### HOD login — items found by workers
 Workers (housekeeping, security) have no login. When they find an item they hand it to the department, and the **HOD posts it from a separate department login**: pick Student / HOD on the login page, choose the department, enter the HOD password (account `hod-<branch>@ncetmail.com`, e.g. `hod-cs@ncetmail.com` — one account per department, created by the admin in Supabase Auth). The HOD uploads the found item as the department (finder shows as "HOD, CSE Dept", collect-from is locked to their department) and never sees the Lost/complaint tab.
