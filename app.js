@@ -701,6 +701,13 @@ async function boot() {
     if (!ok) return;
     const cat = $("cpCategory").value; const itemName = cat === "Others" ? g("cpOthersName") : g("cpItemName");
     const foundId = $("cpFoundYesNo").value === "Yes" ? $("cpPickItem").value : null;
+    // One open complaint per item: if the owner already has a complaint for this
+    // same item that is not delivered yet, block the duplicate and point them
+    // at their Matches. A delivered complaint does not block a new one.
+    const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const mine = await DB.listMyComplaints(currentUser.uid);
+    const dup = mine.find((c) => c.itemStatus !== "Delivered to Owner" && ((foundId && c.foundItemId === foundId) || (!foundId && norm(c.itemName) === norm(itemName) && c.category === cat)));
+    if (dup) { setErr("errComplaint", `You already raised a complaint for "${dup.itemName}". Check My Matches — you cannot raise another one for the same item while it is still open.`); return; }
     const id = await DB.createComplaint(
       { itemName, category: cat, ownerUsn: g("cpUsn").toUpperCase() || currentUser.usn, ownerUid: currentUser.uid, foundItemId: foundId, matchStatus: "Waiting for Match", itemStatus: "Pending" },
       { mobile: g("cpMobile"), description: g("cpDesc") });
