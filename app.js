@@ -345,6 +345,28 @@ const DB = {
 function fileToDataUrl(f) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); }); }
 
 /* ---------- Matching (Prompt 5) ---------- */
+/* ---------- Confirm a match (shared by Matches page + Profile) ---------- */
+// Owner accepts the match. Student-posted items go Delivered straight away;
+// department (HOD-posted) items wait for the HOD to accept in their Profile.
+async function confirmMatch(m, f) {
+  const isHodItem = (f.finderUsn || "").startsWith("HOD-");
+  await DB.updateMatch(m.id, { status: "Confirmed", confirmedAt: Date.now() });
+  if (isHodItem) {
+    await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
+    sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
+      mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.`));
+    sendMail(usnToEmail(m.finderUsn), "LostLink: a student confirmed your department item",
+      mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.`));
+  } else {
+    await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
+    await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
+    sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
+      mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
+    sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
+      mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
+  }
+}
+
 async function runMatchingForComplaint(complaintId) {
   const d = DEMO ? loadDemo() : null;
   const complaint = DEMO ? d.complaints.find((c) => c.id === complaintId) : (await DB.listMyComplaints(currentUser.uid)).find((c) => c.id === complaintId);
@@ -514,25 +536,7 @@ async function renderMatches() {
       const yes = $("yes-" + m.id), no = $("no-" + m.id);
       if (yes) yes.onclick = async () => {
         if (!$("confirm-" + m.id).checked) { setErr("err-" + m.id, "Please tick the confirmation line first."); return; }
-        const isHodItem = (f.finderUsn || "").startsWith("HOD-");
-        await DB.updateMatch(m.id, { status: "Confirmed", confirmedAt: Date.now() });
-        if (isHodItem) {
-          // Department-held item: the owner confirmed, but it is Delivered only
-          // once the HOD accepts the claim in their Profile.
-          await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
-          sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-            mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.`));
-          sendMail(usnToEmail(m.finderUsn), "LostLink: a student confirmed your department item",
-            mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.`));
-        } else {
-          // Owner accepting the match marks the item Delivered to Owner straight away.
-          await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
-          await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
-          sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-            mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
-          sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
-            mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
-        }
+        await confirmMatch(m, f);
         renderMatches(); renderHome();
       };
       if (no) no.onclick = async () => { await DB.updateMatch(m.id, { status: "Rejected" }); await DB.updateComplaint(m.complaintId, { matchStatus: "Waiting for Match" }); renderMatches(); };
@@ -589,9 +593,28 @@ async function renderProfile() {
   const complaints = await DB.listMyComplaints(u.uid);
   const delivered = mine.filter((x) => x.status === "Delivered to Owner").length + complaints.filter((c) => c.itemStatus === "Delivered to Owner").length;
   $("countFound").textContent = mine.length; $("countLost").textContent = complaints.length; $("countDelivered").textContent = delivered;
-  // HOD approvals: claims the owner already confirmed for this department's
-  // items. The HOD accepts (→ Delivered to Owner) or rejects (→ matching again).
-  const hodBox = $("hodApprovals");
+  // My Complaints (student only): the owner can also accept a match from their
+  // own Profile — with the matched item's photo, so they can check it first.
+  const myBox = $("myComplaintsBox");
+  if (myBox) {
+    if (u.role === "hod") { myBox.hidden = true; myBox.innerHTML = ""; }
+    else {
+      const allMatches = await DB.listAllMatches();
+      myBox.hidden = false;
+      myBox.innerHTML = `<h3>My Complaints</h3>` + (complaints.length ? complaints.map((c) => {
+        const m = allMatches.find((x) => x.complaintId === c.id && x.status === "Possible Match");
+        const f = m ? found.find((x) => x.id === m.foundItemId) : null;
+        return `<div class="card" style="margin-top:10px"><p class="item-title">${esc(c.itemName)}</p><p class="item-meta">${esc(c.category)} • ${esc(c.matchStatus)} • ${esc(c.itemStatus)}</p>${f ? `<p>${f.photoUrl ? `<img class="item-photo" src="${esc(f.photoUrl)}" alt="${esc(f.itemName || "")}">` : ""}</p><p class="item-meta">Possible match: ${esc(f.itemName)} — found at ${esc(f.placeFound || "")}, collect from ${esc(f.collectDept || "")}</p><p><button class="btn btn-primary btn-small" data-accept-complaint="${m.id}">Accept — yes, this is my item</button></p>` : ""}</div>`;
+      }).join("") : `<p class="muted">No complaints yet.</p>`);
+      myBox.querySelectorAll("[data-accept-complaint]").forEach((b) => b.onclick = async () => {
+        const m = allMatches.find((x) => x.id === b.dataset.acceptComplaint);
+        const f = found.find((x) => x.id === m.foundItemId) || {};
+        await confirmMatch(m, f);
+        renderProfile(); renderHome();
+      });
+    }
+  }
+}
   if (hodBox) {
     if (u.role !== "hod") { hodBox.hidden = true; hodBox.innerHTML = ""; }
     else {
