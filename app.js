@@ -138,7 +138,7 @@ const DB = {
   },
   async signInWithGoogle() {
     if (!DEMO) {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href.split("#")[0], queryParams: { hd: "ncetmail.com", prompt: "select_account" } } });
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + "/index.html", queryParams: { hd: "ncetmail.com", prompt: "select_account" } } });
       if (error) throw error;
       return null; // page redirects to Google; restoreSession handles the return
     }
