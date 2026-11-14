@@ -450,12 +450,16 @@ function renderHeader() {
     av.textContent = (currentUser.name || currentUser.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   }
 }
-function itemCard(f, showClaim) {
+function itemCard(f, showClaim, nComplaints) {
   const photo = f.photoUrl ? `<img class="item-photo" src="${esc(f.photoUrl)}" alt="${esc(f.itemName)}">` : `<div class="photo-placeholder">📦 ${esc(f.category)} — no photo</div>`;
   const badge = f.status === "Delivered to Owner" ? `<span class="badge badge-delivered">✓ Delivered to Owner</span>` : `<span class="badge badge-pending">Pending</span>`;
+  const complaintsLine = nComplaints
+    ? `<p class="note">💬 ${nComplaints} complaint${nComplaints === 1 ? "" : "s"} raised for this item</p>`
+    : `<p class="note">No complaints raised for this item yet.</p>`;
   return `<div class="card">${photo}<p class="item-title" style="margin-top:8px">${esc(f.itemName)}</p>
     <p class="item-meta">${esc(f.category)} • Found at ${esc(f.placeFound)} • ${esc(f.dateFound || "")}</p>
     <p>${badge} <span class="note">Collect from: ${esc(f.collectDept || "")} department</span></p>
+    ${complaintsLine}
     <p class="note">Details are shown only to the verified owner.</p>
     ${showClaim ? `<button class="btn btn-secondary btn-small" onclick="window.__goComplaint('${f.id}')">This is mine — Raise a Complaint</button>` : ""}</div>`;
 }
@@ -471,6 +475,10 @@ async function renderHome() {
   const delivered = items.filter((x) => x.status === "Delivered to Owner");
   // Live hero stats on the Welcome screen (guarded: the hero exists on Welcome only).
   const setStat = (id, n) => { const el = $(id); if (el) el.textContent = String(n); };
+  // How many complaints were raised for each found item: a complaint that
+  // picked this item when raising, or one the matching engine linked to it.
+  // (Counted once per complaint — never twice for the same complaint.)
+  let complaintCounts = {};
   try {
     const allComplaints = await DB.listAllComplaints();
     const allMatches = await DB.listAllMatches();
@@ -478,11 +486,14 @@ async function renderHome() {
     setStat("heroStatLost", allComplaints.length);
     setStat("heroStatMatches", allMatches.length);
     setStat("heroStatReturned", delivered.length);
+    complaintCounts = {};
+    allComplaints.forEach((c) => { if (c.foundItemId) complaintCounts[c.foundItemId] = (complaintCounts[c.foundItemId] || 0) + 1; });
+    allMatches.forEach((m) => { const c = allComplaints.find((x) => x.id === m.complaintId); if (c && !c.foundItemId) complaintCounts[m.foundItemId] = (complaintCounts[m.foundItemId] || 0) + 1; });
   } catch (e) { console.warn("Hero stats failed to load:", e); }
   const filtered = active.filter((x) => (activeCategory === "All" || x.category === activeCategory) && (!searchText || x.itemName.toLowerCase().includes(searchText.toLowerCase())));
-  list.innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true)).join("") :
+  list.innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true, complaintCounts[f.id] || 0)).join("") :
     `<div class="card"><p>No found items match yet.</p><button class="btn btn-primary btn-small" onclick="document.getElementById('goUploadBtn').click()">Upload Found Item</button></div>`;
-  $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false)).join("") : "<p class='muted'>No delivered items yet.</p>";
+  $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false, complaintCounts[f.id] || 0)).join("") : "<p class='muted'>No delivered items yet.</p>";
 }
 async function renderComplaintPage() {
   const items = await DB.listFoundPublic();
