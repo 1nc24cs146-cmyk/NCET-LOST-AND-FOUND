@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E2455">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LostLink — NCET Lost &amp; Found | Team LostLink</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="banner" id="modeBanner" hidden></div>
+
+<!-- Persistent navy header (every page) -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo-slot" title="Original NCET logo from ncet.co.in">
+      <img src="src/assets/ncet-logo.png" alt="NCET logo — Nagarjuna College of Engineering & Technology">
+    </div>
+    <div class="topbar-title">Nagarjuna College of Engineering &amp; Technology
+      <small>An Autonomous Institution under VTU, Accredited by NAAC with A+ Grade</small>
+      <span class="brand">LostLink</span>
+    </div>
+    <div class="topbar-right" id="topbarRight" hidden>
+      <span class="usn-pill" id="headerUsn"></span>
+      <a class="avatar" href="#" id="headerAvatar" title="My Profile">?</a>
+      <button class="link-btn" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main class="container" id="app">
+  <p id="loading" class="muted" hidden>Loading…</p>
+
+  <!-- 0A WELCOME -->
+  <section class="view" id="view-welcome">
+    <div class="hero-dark">
+      <div class="hero-pill"><img src="src/assets/ncet-logo.png" alt="NCET logo"><span><b>NAGARJUNA COLLEGE OF ENGINEERING &amp; TECHNOLOGY</b><small>An Autonomous Institution &bull; Affiliated to VTU &bull; NAAC &lsquo;A+&rsquo;</small></span></div>
+      <h1 class="hero-headline">Find It. Match It. <span class="grad-text">Get It Back.</span></h1>
+      <p class="hero-sub">NCET&rsquo;s intelligent lost &amp; found management system. Report lost items, upload found belongings, and let our rule-based matching engine reconnect you with your essentials securely on campus.</p>
+      <div class="hero-cta">
+        <button class="btn btn-blue" type="button" onclick="document.getElementById('topbarRight').hidden ? document.getElementById('welcomeLoginBtn').click() : document.getElementById('goComplaintBtn').click()">&#128270; Find My Lost Item</button>
+        <button class="btn btn-dark" type="button" onclick="document.getElementById('topbarRight').hidden ? document.getElementById('welcomeLoginBtn').click() : document.getElementById('goUploadBtn').click()">&#8853; Report Found Item</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card"><b id="heroStatFound">0</b><span>TOTAL FOUND ITEMS</span></div>
+        <div class="stat-card"><b id="heroStatLost">0</b><span>LOST COMPLAINTS</span></div>
+        <div class="stat-card"><b id="heroStatMatches">0</b><span>SMART MATCHES</span></div>
+        <div class="stat-card"><b id="heroStatReturned">0</b><span>RETURNED TO OWNERS</span></div>
+      </div>
+      <div class="motto">Innovate. Ignite. Inspire. &nbsp;|&nbsp; Est. 2001 &nbsp;|&nbsp; 25+ Years of Excellence &nbsp;|&nbsp; Devanahalli, Bengaluru</div>
+    </div>
+    <button class="btn btn-primary" id="welcomeLoginBtn" type="button">Login with College Email</button>
+    <p style="height:12px"></p>
+    <button class="btn btn-secondary" id="welcomeCreateBtn" type="button" style="width:100%">Create Account</button>
+    <p style="height:12px"></p>
+    <button class="btn btn-google" id="welcomeGoogleBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
+    <p class="muted" style="text-align:center;margin-top:12px">Only for NCET students.</p>
+  </section>
+
+  <!-- 1 LOGIN -->
+  <section class="view" id="view-login">
+    <div class="card">
+      <h2 id="loginTitle">Login with College Email</h2>
+      <button class="btn btn-google" id="googleLoginBtn" type="button"><span class="g-logo">G</span> Continue with NCET Mail</button>
+      <div class="error" id="errGoogle"></div>
+      <p class="muted" style="text-align:center;margin:8px 0 4px">Sign in directly with your NCET Google account — no password needed. Only USN emails like 1nc24cs146@ncetmail.com are accepted.</p>
+      <div class="divider"><span>or login with password</span></div>
+      <form id="loginForm" novalidate>
+        <div class="field"><label for="loginEmail">College Email</label>
+          <input id="loginEmail" type="email" placeholder="1nc24cs146@ncetmail.com" autocomplete="username">
+          <div class="hint">Use your USN email — example: 1nc24cs146@ncetmail.com</div>
+          <div class="error" id="errEmail"></div></div>
+        <div class="field"><label for="loginUsn">College USN</label>
+          <input id="loginUsn" type="text" placeholder="1NC24CS146" autocomplete="off" style="text-transform:uppercase">
+          <div class="error" id="errUsn"></div></div>
+        <div class="field"><label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="Minimum 6 characters" autocomplete="current-password">
+          <div class="error" id="errPassword"></div></div>
+        <button class="btn btn-primary" type="submit" id="loginSubmit">Login</button>
+        <div class="error" id="errLogin"></div>
+        <p class="muted" style="margin-top:12px">Only NCET students can log in — use your USN college email (example: 1nc24cs146@ncetmail.com) and the USN that matches it.</p>
+        <p><button class="link-btn" type="button" id="toggleModeBtn" style="color:var(--navy)">New student? Create account</button></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 2 HOME -->
+  <section class="view" id="view-home">
+    <div class="navrow">
+      <button class="btn btn-primary" id="goUploadBtn" type="button">Upload Found Item</button>
+      <button class="btn btn-secondary" id="goComplaintBtn" type="button">Raise a Complaint — I Lost Something</button>
+    </div>
+    <div class="card">
+      <h2>Found Items</h2>
+      <div class="search-row"><input id="searchBox" type="search" placeholder="Search by item name…"></div>
+      <div id="categoryChips" style="margin-top:12px"></div>
+      <p class="note">Details are shown only to the verified owner.</p>
+    </div>
+    <div id="foundList"><p class="muted">Loading…</p></div>
+    <h2 style="margin-top:16px">Delivered history</h2>
+    <div id="deliveredList"><p class="muted">No delivered items yet.</p></div>
+  </section>
+
+  <!-- 2 UPLOAD -->
+  <section class="view" id="view-upload">
+    <div class="card"><h2>Upload Found Item</h2>
+      <form id="uploadForm" novalidate>
+        <div class="field"><label for="upUploader">Name of the uploader</label><input id="upUploader" required><div class="error" id="errUpUploader"></div></div>
+        <div class="field"><label for="upMobile">Mobile number</label><input id="upMobile" type="tel" inputmode="numeric" placeholder="10 digits" maxlength="10"><div class="error" id="errUpMobile"></div></div>
+        <div class="field"><label for="upFinder">Who found it</label><input id="upFinder" required><div class="error" id="errUpFinder"></div></div>
+        <div class="field"><label for="upFinderUsn">USN of the finder</label><input id="upFinderUsn" style="text-transform:uppercase" placeholder="1NC24CS146"><div class="error" id="errUpFinderUsn"></div></div>
+        <div class="field"><label for="upItemName">What did they find — item name</label><input id="upItemName" required><div class="error" id="errUpItemName"></div></div>
+        <div class="field"><label for="upCategory">Item category</label><select id="upCategory"></select>
+          <div id="upOthersWrap" hidden style="margin-top:8px"><label for="upOthersName">Type the item name</label><input id="upOthersName"></div>
+          <div class="error" id="errUpCategory"></div></div>
+        <div class="field"><label for="upPlace">Where did they find it</label><input id="upPlace" placeholder="e.g. Library, Canteen, Classroom" required><div class="error" id="errUpPlace"></div></div>
+        <div class="field"><label for="upDesc">Description of the item</label><textarea id="upDesc" placeholder="Colour, brand, marks, anything that identifies it"></textarea><div class="error" id="errUpDesc"></div></div>
+        <div class="field"><label for="upDept">Department to collect from</label><select id="upDept"></select><div class="error" id="errUpDept"></div></div>
+        <div class="field"><label for="upPhoto">Photo of the item (optional)</label><input id="upPhoto" type="file" accept="image/*"><div class="hint">For ID Card items: do not upload a clear photo of the full ID card — cover the number if you can.</div><div id="upPhotoPreview"></div></div>
+        <button class="btn btn-primary" type="submit">Upload Found Item</button>
+        <div class="error" id="errUpload"></div><p class="ok" id="okUpload"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 3 COMPLAINT -->
+  <section class="view" id="view-complaint">
+    <div class="card"><h2>Raise a Complaint — I Lost Something</h2>
+      <form id="complaintForm" novalidate>
+        <div class="field"><label for="cpItemName">Name of the item</label><input id="cpItemName" required><div class="error" id="errCpItemName"></div></div>
+        <div class="field"><label for="cpCategory">Item category</label><select id="cpCategory"></select>
+          <div id="cpOthersWrap" hidden style="margin-top:8px"><label for="cpOthersName">Type the item name</label><input id="cpOthersName"></div></div>
+        <div class="field"><label for="cpUsn">Your USN</label><input id="cpUsn" style="text-transform:uppercase"><div class="error" id="errCpUsn"></div></div>
+        <div class="field"><label for="cpMobile">Mobile number</label><input id="cpMobile" type="tel" inputmode="numeric" placeholder="10 digits" maxlength="10"><div class="error" id="errCpMobile"></div></div>
+        <div class="field"><label>Item found — have you seen this item in the Found Items list?</label>
+          <select id="cpFoundYesNo"><option value="No">No</option><option value="Yes">Yes</option></select>
+          <div id="cpPickWrap" hidden style="margin-top:8px"><label for="cpPickItem">Pick the item</label><select id="cpPickItem"></select></div></div>
+        <div class="field"><label for="cpDesc">Description of the item</label><textarea id="cpDesc" placeholder="Describe your item in detail — colour, brand, marks, name written on it. Only you can see this. It is used to match your item."></textarea><div class="error" id="errCpDesc"></div></div>
+        <button class="btn btn-primary" type="submit">Raise Complaint</button>
+        <div class="error" id="errComplaint"></div><p class="ok" id="okComplaint"></p>
+      </form>
+    </div>
+    <h2>My Complaints</h2>
+    <div id="myComplaints"></div>
+  </section>
+
+  <!-- 5 MATCHES -->
+  <section class="view" id="view-matches">
+    <h2>My Matches</h2>
+    <p class="muted">Possible matches appear here for the owner only. Confirm only if it is really your item.</p>
+    <div id="matchesList"></div>
+    <h2 style="margin-top:16px">Feedback</h2>
+    <div id="feedbackList"></div>
+  </section>
+
+  <!-- 1A PROFILE -->
+  <section class="view" id="view-profile">
+    <div class="card" style="text-align:center">
+      <div class="avatar" id="profileAvatar" style="width:72px;height:72px;font-size:24px">?</div>
+      <h2 id="profileName" style="margin-top:8px">—</h2>
+      <p class="muted" id="profileSub"></p>
+    </div>
+    <div class="card" id="profileDetails"></div>
+    <div class="counts">
+      <div class="card"><b id="countFound">0</b>Found</div>
+      <div class="card"><b id="countLost">0</b>Lost</div>
+      <div class="card"><b id="countDelivered">0</b>Returned / Delivered</div>
+    </div>
+    <div class="card"><h3>Edit Profile</h3>
+      <form id="profileForm" novalidate>
+        <div class="field"><label for="pfName">Full name</label><input id="pfName"><div class="error" id="errPfName"></div></div>
+        <div class="field"><label for="pfMobile">Mobile number</label><input id="pfMobile" type="tel" maxlength="10" placeholder="10 digits"><div class="error" id="errPfMobile"></div></div>
+        <p class="note">USN, college email, department, branch code and year are locked — these come from your college USN email and cannot be changed.</p>
+        <button class="btn btn-primary" type="submit">Save Profile</button>
+        <p class="ok" id="okProfile"></p>
+      </form>
+      <p style="margin-top:12px"><button class="btn btn-navy" id="profileLogoutBtn" type="button">Logout</button></p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  Nagarjuna College of Engineering &amp; Technology, Beedaganahalli, Venkatagiri Kote Post, Devanahalli, Bengaluru, Karnataka 562164<br>
+  <small>LostLink — built by Team LostLink for NCET students.</small>
+</footer>
+<script type="module" src="app.js"></script>
+<script>
+(function(){var h=document.querySelector('.hero-dark');if(!h)return;var fine=window.matchMedia('(pointer:fine)').matches;if(!fine)return;h.addEventListener('pointermove',function(e){var r=h.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;h.style.transform='rotateY('+(x*3).toFixed(2)+'deg) rotateX('+(-y*2).toFixed(2)+'deg)';});h.addEventListener('pointerleave',function(){h.style.transform='';});})();
+</script>
+<nav class="bottom-nav" id="bottomNav" hidden>
+  <button type="button" data-view="home" onclick="window.__goView('home')">🏠<span>Home</span></button>
+  <button type="button" data-view="upload" onclick="window.__goView('upload')">➕<span>Found</span></button>
+  <button type="button" data-view="complaint" onclick="window.__goView('complaint')">🔍<span>Lost</span></button>
+  <button type="button" data-view="matches" onclick="window.__goView('matches')">🤝<span>Matches</span></button>
+  <button type="button" data-view="profile" onclick="window.__goView('profile')">👤<span>Profile</span></button>
+</nav>
+</body>
+</html>

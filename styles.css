@@ -1,0 +1,162 @@
+/* LostLink — NCET Lost & Found | Team LostLink, INNOVATE 2.0, 14 Nov 2026
+   NCET design system, verified from https://ncet.co.in/ (14 Nov 2026):
+   Deep Navy #0E2455, NCET Orange #F6872A, Deep Orange #F05819 (hover only),
+   White #FFFFFF cards, Light Grey #F8FAFC page. No other brand colours. */
+:root{
+  --navy:#0E2455; --orange:#F6872A; --orange-hover:#F05819;
+  --white:#FFFFFF; --page:#F8FAFC; --ink:#1a2233; --muted:#64748b;
+  --line:#e2e8f0; --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--page);color:var(--ink);line-height:1.5}
+img{max-width:100%}
+a{color:var(--orange)}
+.container{max-width:860px;margin:0 auto;padding:16px}
+h1,h2,h3{color:var(--navy);margin:0 0 8px}
+p{margin:0 0 12px}
+button{font:inherit;cursor:pointer}
+/* Header */
+.topbar{background:var(--navy);color:var(--white)}
+.topbar-inner{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo-slot{width:48px;height:48px;background:var(--white);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:800;font-size:13px;text-align:center;line-height:1.1;flex:none;overflow:hidden}
+.logo-slot img{width:100%;height:100%;object-fit:contain}
+.topbar-title{font-weight:800;line-height:1.2}
+.topbar-title small{display:block;font-weight:400;font-size:12px;opacity:.85}
+.topbar-title .brand{color:var(--orange)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.usn-pill{font-size:13px;opacity:.95}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;border:2px solid #fff;text-decoration:none}
+.link-btn{background:none;border:0;color:#fff;text-decoration:underline;padding:6px}
+.link-btn:hover{color:var(--orange)}
+/* Banner, buttons, cards */
+.banner{background:#fff3e0;border-bottom:2px solid var(--orange);color:#5b3a00;font-size:14px;text-align:center;padding:8px 12px}
+.btn{display:inline-block;min-height:44px;padding:10px 18px;border-radius:8px;border:0;font-weight:700;text-align:center;text-decoration:none}
+.btn-primary{background:var(--orange);color:#fff;width:100%}
+.btn-primary:hover,.btn-primary:active{background:var(--orange-hover)}
+.btn-secondary{background:var(--white);color:var(--navy);border:2px solid var(--navy)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-small{min-height:36px;padding:7px 12px;font-size:14px;width:auto}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-weight:600;color:var(--navy);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+.field textarea{min-height:90px;resize:vertical}
+.field .hint{font-size:13px;color:var(--muted);margin-top:4px}
+.error{color:#b91c1c;font-size:13px;margin-top:4px;min-height:16px}
+.ok{color:#166534;font-size:14px}
+.muted{color:var(--muted);font-size:14px}
+.chip{display:inline-block;padding:7px 12px;border:1px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);margin:0 6px 6px 0;min-height:36px}
+.chip.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge-pending{background:#fff3e0;color:#92400e;border:1px solid var(--orange)}
+.badge-delivered{background:var(--navy);color:#fff}
+.badge-match{background:#eef2ff;color:var(--navy);border:1px solid var(--navy)}
+.item-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;background:var(--page);display:block}
+.photo-placeholder{background:var(--page);border:1px dashed #94a3b8;border-radius:8px;padding:24px;text-align:center;color:var(--muted);font-size:14px}
+.item-title{font-weight:700;color:var(--navy)}
+.item-meta{font-size:14px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+/* Welcome */
+.hero{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.hero-photo{background:var(--navy);color:#fff;padding:28px 16px;text-align:center}
+.hero-photo .photo-label{font-size:12px;letter-spacing:2px;opacity:.8}
+.hero-photo h1{color:#fff;font-size:26px;margin:8px 0}
+.hero-photo .motto{color:var(--orange);font-weight:800;font-size:18px}
+.trust{text-align:center;font-weight:700;color:var(--navy)}
+.stats{background:var(--navy);color:#fff;border-radius:var(--radius);display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;margin-bottom:12px;text-align:center}
+.stats b{display:block;font-size:22px}
+.stats span{color:var(--orange);font-size:13px;font-weight:700}
+.footer{background:var(--navy);color:#fff;text-align:center;font-size:13px;padding:16px;margin-top:16px}
+.footer small{opacity:.85}
+.view{display:none}
+.view.active{display:block}
+.navrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.navrow .btn{flex:1;min-width:140px}
+.counts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.counts .card{margin:0;text-align:center}
+.counts b{font-size:24px;color:var(--navy);display:block}
+.star{font-size:26px;background:none;border:0;color:#cbd5e1;padding:2px 4px}
+.star.on{color:var(--orange)}
+.search-row{display:flex;gap:8px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:180px;min-height:44px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px}
+@media (min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:390px){.container{padding:12px}.topbar-title{font-size:14px}}
+
+/* Direct login with NCET Mail (Google) */
+.btn-google{background:#fff;color:var(--navy);border:2px solid var(--navy);width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-google:hover{background:#f1f5f9}
+.g-logo{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #4285F4;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:14px 0}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---- Dark hero (Welcome), matching the reference design ---- */
+.hero-dark{position:relative;background:linear-gradient(180deg,#0a1a3f 0%,#0e2455 55%,#122c63 100%);color:#fff;border-radius:var(--radius);padding:28px 18px 22px;text-align:center;margin-bottom:12px;overflow:hidden;perspective:900px;transform-style:preserve-3d;transition:transform .35s ease}
+.hero-dark::before{content:"";position:absolute;inset:-4%;background:url("src/assets/ncet-campus.jpg") center/cover no-repeat;animation:heroZoom 26s ease-in-out infinite alternate;will-change:transform}
+.hero-dark::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,26,63,.82) 0%,rgba(14,36,85,.74) 55%,rgba(18,44,99,.82) 100%)}
+.hero-dark>*{position:relative;z-index:1}
+@keyframes heroZoom{from{transform:scale(1) translateY(0)}to{transform:scale(1.12) translateY(-1.5%)}}
+.hero-pill,.hero-headline,.hero-sub,.hero-cta,.hero-stats,.hero-dark .motto{transform:translateZ(24px)}
+.hero-stats .stat-card{animation:statRise .7s ease both}
+.hero-stats .stat-card:nth-child(2){animation-delay:.12s}
+.hero-stats .stat-card:nth-child(3){animation-delay:.24s}
+.hero-stats .stat-card:nth-child(4){animation-delay:.36s}
+@keyframes statRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.hero-stats .stat-card{transition:transform .25s ease,border-color .25s ease}
+.hero-stats .stat-card:hover{transform:translateY(-4px) scale(1.03);border-color:rgba(246,135,42,.7)}
+.hero-cta .btn{transition:transform .2s ease,box-shadow .2s ease}
+.hero-cta .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.hero-pill{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 16px 8px 8px;text-align:left}
+.hero-pill img{width:36px;height:36px;border-radius:50%;background:#fff;object-fit:cover}
+.hero-pill b{display:block;color:#f5c518;font-size:12px;letter-spacing:.5px}
+.hero-pill small{display:block;color:#e8ecf5;font-size:11px}
+.hero-headline{color:#fff;font-size:34px;line-height:1.15;margin:22px 0 12px}
+.grad-text{background:linear-gradient(90deg,#f5c518,#7ee2a8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{color:#dbe3f2;max-width:560px;margin:0 auto 20px;font-size:15px;line-height:1.6}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+.btn-blue{background:#2563eb;color:#fff;border:none}
+.btn-blue:hover{background:#1d4ed8}
+.btn-dark{background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.btn-dark:hover{background:rgba(0,0,0,.6)}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:720px;margin:0 auto 16px}
+.stat-card{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:14px 6px}
+.stat-card b{display:block;font-size:26px;color:#f5c518}
+.stat-card:nth-child(2) b{color:#7dd3fc}
+.stat-card:nth-child(3) b{color:#c4b5fd}
+.stat-card:nth-child(4) b{color:#6ee7b7}
+.stat-card span{font-size:10px;letter-spacing:1px;color:#cbd5e1}
+.hero-dark .motto{color:#f6872a;font-weight:800;font-size:14px}
+@media (max-width:560px){.hero-headline{font-size:26px}.hero-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- Mobile-first: the app is built for phones ---- */
+html{-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+*{-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation}
+body.has-nav .container{padding-bottom:92px}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;background:var(--navy);border-top:2px solid var(--orange);padding-bottom:env(safe-area-inset-bottom,0)}
+.bottom-nav[hidden]{display:none}
+.bottom-nav button{flex:1;background:none;border:0;color:#cbd5e1;padding:10px 2px 8px;font-size:18px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px}
+.bottom-nav button span{font-size:11px}
+.bottom-nav button.active{color:var(--orange)}
+@media (max-width:640px){
+  .field input,.field select,.field textarea,.search-row input{font-size:16px;min-height:48px}
+  .btn{min-height:48px}
+  .navrow .btn{flex:1 1 100%;min-width:0}
+  .hero-dark{padding:22px 14px 18px}
+  .hero-pill b{font-size:11px}
+  .hero-pill small{font-size:10px}
+  .hero-cta .btn{flex:1 1 160px}
+  .counts{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .counts b{font-size:20px}
+  .card{padding:14px}
+}
+@media (max-width:480px){
+  .topbar-title small{display:none}
+  .topbar-title{font-size:15px}
+  .logo-slot{width:40px;height:40px}
+  .topbar-inner{padding:8px 12px;gap:8px}
+  .usn-pill{display:none}
+  .hero-headline{font-size:24px}
+  .container{padding:12px}
+}

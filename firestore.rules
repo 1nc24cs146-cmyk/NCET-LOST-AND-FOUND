@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isCollegeEmail() {
+      return isSignedIn() && request.auth.token.email.matches('^1nc[0-9]{2}(cs|is|cd|ci|ec|cv|ic)[0-9]{3}@ncetmail\\.com$');
+    }
+    // Profile: only its own uid, and only name + mobile may change.
+    match /users/{uid} {
+      allow read, write: if isCollegeEmail() && request.auth.uid == uid;
+    }
+    // Public found items: any signed-in NCET student can read.
+    // Never store mobile or description in the public doc.
+    match /foundItems/{itemId} {
+      allow read: if isCollegeEmail();
+      allow create: if isCollegeEmail() && request.resource.data.uploaderUid == request.auth.uid
+        && !('mobile' in request.resource.data) && !('description' in request.resource.data);
+      allow update: if isCollegeEmail() && resource.data.uploaderUid == request.auth.uid
+        && !('mobile' in request.resource.data) && !('description' in request.resource.data);
+      match /private/{doc} {
+        // Owner only; the other party only after a Confirmed match.
+        allow read, write: if isCollegeEmail() && (
+          request.auth.uid == get(/databases/$(database)/documents/foundItems/$(itemId)).data.uploaderUid
+          || exists(/databases/$(database)/documents/matches/$(request.auth.uid + '_' + itemId))
+        );
+      }
+    }
+    match /complaints/{complaintId} {
+      allow read: if isCollegeEmail();
+      allow create: if isCollegeEmail() && request.resource.data.ownerUid == request.auth.uid
+        && !('mobile' in request.resource.data) && !('description' in request.resource.data);
+      allow update: if isCollegeEmail() && (resource.data.ownerUid == request.auth.uid
+        || request.auth.uid in resource.data.keys());
+      match /private/{doc} {
+        allow read, write: if isCollegeEmail() && (
+          request.auth.uid == get(/databases/$(database)/documents/complaints/$(complaintId)).data.ownerUid
+        );
+      }
+    }
+    match /matches/{matchId} {
+      allow read, update: if isCollegeEmail() && (resource.data.ownerUid == request.auth.uid || resource.data.finderUid == request.auth.uid);
+      allow create: if isCollegeEmail();
+    }
+    match /feedback/{feedbackId} {
+      allow read: if isCollegeEmail();
+      allow create: if isCollegeEmail() && request.resource.data.authorUid == request.auth.uid
+        && !('mobile' in request.resource.data);
+    }
+  }
+}
