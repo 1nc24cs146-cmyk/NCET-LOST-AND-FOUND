@@ -98,6 +98,10 @@ Only USN-format college emails are accepted, checked **before** Supabase is call
 
 **Direct login with NCET Mail.** The **Continue with NCET Mail** button (on Welcome and on Login) uses Supabase Google OAuth (`hd: ncetmail.com`) — pick your NCET Google account, no password needed. The returned email is still checked with the strict USN rule; a non-USN or non-ncetmail account is signed out again and rejected.
 
+### HOD login — items found by workers
+Workers (housekeeping, security) have no login. When they find an item they hand it to the department, and the **HOD posts it from a separate department login**: pick Student / HOD on the login page, choose the department, enter the HOD password (account `hod-<branch>@ncetmail.com`, e.g. `hod-cs@ncetmail.com` — one account per department, created by the admin in Supabase Auth). The HOD uploads the found item as the department (finder shows as "HOD, CSE Dept", collect-from is locked to their department) and never sees the Lost/complaint tab.
+When a student confirms a match on a department-held item, the item is **not** Delivered yet — the claim waits in the **HOD's Profile** under "Claims waiting for your approval", with the item photo and the claimant's USN. The HOD taps **Accept** (item becomes Delivered to Owner, both sides mailed) or **Reject** (match rejected, the complaint goes back to Waiting for Match and matching continues). Student-posted items are unchanged: the owner accepting the match marks it Delivered straight away.
+
 **Login gate.** Nothing works until you are logged in — no demo logins, no guest access. Logged-out users only ever see the Welcome and Login screens; Home, Upload, Complaint, Matches and Profile all send you back to Welcome until you log in. Once you are in, the app keeps you signed in on that site — Render and GitHub Pages are different sites, so use the Render link as your main one.
 
 ## 📧 Email notifications
