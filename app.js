@@ -476,11 +476,13 @@ async function renderMatches() {
       if (yes) yes.onclick = async () => {
         if (!$("confirm-" + m.id).checked) { setErr("err-" + m.id, "Please tick the confirmation line first."); return; }
         await DB.updateMatch(m.id, { status: "Confirmed", confirmedAt: Date.now() });
-        await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
+        // Owner accepting the match marks the item Delivered to Owner straight away.
+        await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
+        await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
         sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-          mailWrap("Match confirmed", `You confirmed the match. Please collect the item from the ${f ? f.collectDept : ""} department and tap "I received my item" in LostLink once you have it.`));
+          mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
         sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
-          mailWrap("Match confirmed", `The owner confirmed that the item you found is theirs. Please hand it over at the ${f ? f.collectDept : ""} department.`));
+          mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
         renderMatches(); renderHome();
       };
       if (no) no.onclick = async () => { await DB.updateMatch(m.id, { status: "Rejected" }); await DB.updateComplaint(m.complaintId, { matchStatus: "Waiting for Match" }); renderMatches(); };
