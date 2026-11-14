@@ -244,12 +244,14 @@ const DB = {
     return loadDemo().complaints;
   },
   async listMatches(uid_) {
+    // Owner-only: a match shows only in that complaint owner's Profile and
+    // Matches. The finder and everyone else never see it.
     if (!DEMO) {
-      const { data, error } = await supabase.from("matches").select("*").or(`owner_uid.eq.${uid_},finder_uid.eq.${uid_}`).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("matches").select("*").eq("owner_uid", uid_).order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []).map(mapMatch);
     }
-    const d = loadDemo(); return d.matches.filter((m) => m.ownerUid === uid_ || m.finderUid === uid_);
+    const d = loadDemo(); return d.matches.filter((m) => m.ownerUid === uid_);
   },
   async listAllMatches() {
     if (!DEMO) {
@@ -471,7 +473,6 @@ async function renderHome() {
   chips.innerHTML = ["All", ...CATEGORIES].map((c) => `<button type="button" class="chip ${activeCategory === c ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
   chips.querySelectorAll(".chip").forEach((b) => b.onclick = () => { activeCategory = b.dataset.cat; renderHome(); });
   let items = await DB.listFoundPublic();
-  const active = items.filter((x) => x.status !== "Delivered to Owner");
   const delivered = items.filter((x) => x.status === "Delivered to Owner");
   // Live hero stats on the Welcome screen (guarded: the hero exists on Welcome only).
   const setStat = (id, n) => { const el = $(id); if (el) el.textContent = String(n); };
@@ -479,6 +480,9 @@ async function renderHome() {
   // picked this item when raising, or one the matching engine linked to it.
   // (Counted once per complaint — never twice for the same complaint.)
   let complaintCounts = {};
+  // A matched item leaves the public board — it shows only in that owner's
+  // Profile and Matches, and nobody else can see anything about it.
+  let matchedItemIds = new Set();
   try {
     const allComplaints = await DB.listAllComplaints();
     const allMatches = await DB.listAllMatches();
@@ -489,7 +493,9 @@ async function renderHome() {
     complaintCounts = {};
     allComplaints.forEach((c) => { if (c.foundItemId) complaintCounts[c.foundItemId] = (complaintCounts[c.foundItemId] || 0) + 1; });
     allMatches.forEach((m) => { const c = allComplaints.find((x) => x.id === m.complaintId); if (c && !c.foundItemId) complaintCounts[m.foundItemId] = (complaintCounts[m.foundItemId] || 0) + 1; });
+    matchedItemIds = new Set(allMatches.filter((m) => m.status !== "Rejected").map((m) => m.foundItemId));
   } catch (e) { console.warn("Hero stats failed to load:", e); }
+  const active = items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id));
   const filtered = active.filter((x) => (activeCategory === "All" || x.category === activeCategory) && (!searchText || x.itemName.toLowerCase().includes(searchText.toLowerCase())));
   list.innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true, complaintCounts[f.id] || 0)).join("") :
     `<div class="card"><p>No found items match yet.</p><button class="btn btn-primary btn-small" onclick="document.getElementById('goUploadBtn').click()">Upload Found Item</button></div>`;
@@ -497,8 +503,11 @@ async function renderHome() {
 }
 async function renderComplaintPage() {
   const items = await DB.listFoundPublic();
+  // Matched items are not pickable — they show only in their owner's Profile.
+  let matchedItemIds = new Set();
+  try { const allMatches = await DB.listAllMatches(); matchedItemIds = new Set(allMatches.filter((m) => m.status !== "Rejected").map((m) => m.foundItemId)); } catch (e) {}
   const pick = $("cpPickItem");
-  pick.innerHTML = items.filter((x) => x.status !== "Delivered to Owner").map((x) => `<option value="${x.id}">${esc(x.itemName)} — ${esc(x.placeFound)}</option>`).join("");
+  pick.innerHTML = items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id)).map((x) => `<option value="${x.id}">${esc(x.itemName)} — ${esc(x.placeFound)}</option>`).join("");
   $("cpUsn").value = currentUser ? currentUser.usn : "";
   const mine = currentUser ? await DB.listMyComplaints(currentUser.uid) : [];
   $("myComplaints").innerHTML = mine.length ? mine.map((c) => `<div class="card"><p class="item-title">${esc(c.itemName)}</p><p class="item-meta">${esc(c.category)} • ${esc(c.date || "")}</p><p><span class="badge badge-match">${esc(c.matchStatus || "Waiting for Match")}</span> <span class="badge ${c.itemStatus === "Delivered to Owner" ? "badge-delivered" : "badge-pending"}">${esc(c.itemStatus || "Pending")}</span></p></div>`).join("") :
