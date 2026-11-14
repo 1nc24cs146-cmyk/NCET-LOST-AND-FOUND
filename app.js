@@ -449,7 +449,8 @@ async function renderMatches() {
       const f = found.find((x) => x.id === m.foundItemId) || { itemName:"(item)", category:"", collectDept:"", status:"Pending" };
       const isOwner = m.ownerUid === currentUser.uid;
       const card = document.createElement("div"); card.className = "card";
-      let html = `<p class="item-title">${esc(f.itemName)}</p><p class="item-meta">${esc(f.category)} • Found at ${esc(f.placeFound || "")} • Collect from: ${esc(f.collectDept || "")} department</p>
+      const photo = f.photoUrl ? `<img class="item-photo" src="${esc(f.photoUrl)}" alt="${esc(f.itemName)}">` : `<div class="photo-placeholder">📦 ${esc(f.category)} — no photo</div>`;
+      let html = `${photo}<p class="item-title">${esc(f.itemName)}</p><p class="item-meta">${esc(f.category)} • Found at ${esc(f.placeFound || "")} • Collect from: ${esc(f.collectDept || "")} department</p>
         <p><span class="badge badge-match">${esc(m.status)}</span> <span class="badge ${f.status === "Delivered to Owner" ? "badge-delivered" : "badge-pending"}">${esc(f.status)}</span></p>`;
       if (m.status === "Possible Match" && isOwner) {
         html += `<label style="display:block;margin:8px 0"><input type="checkbox" id="confirm-${m.id}"> I confirm this item matches my description and I am its owner.</label>
