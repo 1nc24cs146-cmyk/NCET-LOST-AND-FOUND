@@ -143,6 +143,10 @@ Auth, database and storage are all Supabase (project `lostlink-ncet`, South Asia
 
 ## 🛡️ Privacy
 
+- Only NCET students can log in (Gmail only, USN email checked); HODs have their own department login.
+- Descriptions and mobile numbers live in private tables, readable only by the owner — and by the other party only after a Confirmed match.
+- **Once a complaint is matched, the found item leaves the public board and the match shows only in that complaint owner's Profile and Matches — the finder and nobody else can see anything about the matched item.** If the owner says "this is not mine", the match is rejected and the item comes back on the board.
+
 Public lists show only item, category, place found, date, photo and status. Full descriptions and mobile numbers live only in `found_items_private` and `complaints_private`, readable only by the owner — and by the other party only after a Confirmed match. This is enforced by Row Level Security in `supabase-schema.sql` and in the app code (public lists never fetch private data).
 
 ## 💻 How to run
