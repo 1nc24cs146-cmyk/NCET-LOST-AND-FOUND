@@ -67,7 +67,7 @@ That's it. No install, no extra app.
 
 ## ⚙️ How it works
 
-1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo — tap **Take Photo** to use the phone camera or **Upload Photo** to pick one from the gallery, with a preview before posting. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table.
+1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo — tap **Take Photo** to use the phone camera or **Upload Photo** to pick one from the gallery, with a preview before posting. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table. Every found item card on the Home board shows how many complaints were raised for that item ("2 complaints raised for this item", or "No complaints raised for this item yet").
 2. **An owner raises a complaint.** Item name, category, and a description only the owner can see. The owner gets an email the moment the complaint is raised.
 3. **The app matches them.** Same item name + category, or a close description match, creates a Possible Match — visible only to that owner, with the finder's photo. Both sides get an email.
 4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Tap **No, this is not mine** and the match is rejected.
