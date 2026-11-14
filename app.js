@@ -614,7 +614,9 @@ async function renderProfile() {
       });
     }
   }
-}
+  // HOD approvals: claims the owner already confirmed for this department's
+  // items. The HOD accepts (→ Delivered to Owner) or rejects (→ matching again).
+  const hodBox = $("hodApprovals");
   if (hodBox) {
     if (u.role !== "hod") { hodBox.hidden = true; hodBox.innerHTML = ""; }
     else {
