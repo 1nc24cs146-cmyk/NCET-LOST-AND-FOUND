@@ -688,6 +688,11 @@ async function renderProfile() {
   $("profileDetails").innerHTML = u.role === "hod"
     ? `<p><b>Department:</b> ${esc(u.department)}</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
     : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
+  // HODs only edit their mobile — their name is the department, so no name field for them.
+  $("pfNameField").hidden = u.role === "hod";
+  $("pfNote").textContent = u.role === "hod"
+    ? "Mobile number is compulsory — you can't use the app until it is saved. Department and department email are locked."
+    : "Mobile number is compulsory — you can't use the app until it is saved. USN, college email, department, branch code and year are locked — these come from your college USN email and cannot be changed.";
   $("pfName").value = u.name || ""; $("pfMobile").value = u.mobile || "";
   const found = await DB.listFoundPublic();
   const mine = found.filter((x) => x.uploaderUid === u.uid);
