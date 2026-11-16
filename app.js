@@ -502,11 +502,23 @@ function itemCard(f, showClaim, nComplaints) {
 }
 
 /* ---------- Renderers ---------- */
+let homeCache = null; // last fetched board data — search filters from this, no refetch per keystroke
+function renderHomeList() {
+  // Instant, local-only render from the cache: no "Loading…" flash, no network, no shake while typing.
+  if (!homeCache) { renderHome(); return; }
+  document.querySelectorAll("#categoryChips .chip").forEach((b) => b.classList.toggle("active", b.dataset.cat === activeCategory));
+  const { items, complaintCounts, matchedItemIds, delivered } = homeCache;
+  const active = items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id));
+  const filtered = active.filter((x) => (activeCategory === "All" || x.category === activeCategory) && (!searchText || x.itemName.toLowerCase().includes(searchText.toLowerCase())));
+  $("foundList").innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true, complaintCounts[f.id] || 0)).join("") :
+    `<div class="card"><p>No found items match yet.</p><button class="btn btn-primary btn-small" onclick="document.getElementById('goUploadBtn').click()">Upload Found Item</button></div>`;
+  $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false, complaintCounts[f.id] || 0)).join("") : "<p class='muted'>No delivered items yet.</p>";
+}
 async function renderHome() {
   const list = $("foundList"); list.innerHTML = "<p class='muted'>Loading…</p>";
   const chips = $("categoryChips");
   chips.innerHTML = ["All", ...CATEGORIES].map((c) => `<button type="button" class="chip ${activeCategory === c ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
-  chips.querySelectorAll(".chip").forEach((b) => b.onclick = () => { activeCategory = b.dataset.cat; renderHome(); });
+  chips.querySelectorAll(".chip").forEach((b) => b.onclick = () => { activeCategory = b.dataset.cat; renderHomeList(); });
   let items = await DB.listFoundPublic();
   const delivered = items.filter((x) => x.status === "Delivered to Owner");
   // Live hero stats on the Welcome screen (guarded: the hero exists on Welcome only).
@@ -530,11 +542,8 @@ async function renderHome() {
     allMatches.forEach((m) => { const c = allComplaints.find((x) => x.id === m.complaintId); if (c && !c.foundItemId) complaintCounts[m.foundItemId] = (complaintCounts[m.foundItemId] || 0) + 1; });
     matchedItemIds = new Set(allMatches.filter((m) => m.status !== "Rejected").map((m) => m.foundItemId));
   } catch (e) { console.warn("Hero stats failed to load:", e); }
-  const active = items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id));
-  const filtered = active.filter((x) => (activeCategory === "All" || x.category === activeCategory) && (!searchText || x.itemName.toLowerCase().includes(searchText.toLowerCase())));
-  list.innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true, complaintCounts[f.id] || 0)).join("") :
-    `<div class="card"><p>No found items match yet.</p><button class="btn btn-primary btn-small" onclick="document.getElementById('goUploadBtn').click()">Upload Found Item</button></div>`;
-  $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false, complaintCounts[f.id] || 0)).join("") : "<p class='muted'>No delivered items yet.</p>";
+  homeCache = { items, complaintCounts, matchedItemIds, delivered };
+  renderHomeList();
 }
 async function renderComplaintPage() {
   const items = await DB.listFoundPublic();
@@ -842,9 +851,10 @@ async function boot() {
   $("headerAvatar").onclick = (e) => { e.preventDefault(); showView("profile"); };
   $("goUploadBtn").onclick = () => showView("upload");
   $("goComplaintBtn").onclick = () => showView("complaint");
-  $("searchBox").addEventListener("input", (e) => { searchText = e.target.value; renderHome(); });
-  $("upFinderUsn").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
-  $("cpUsn").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
+  $("searchBox").addEventListener("input", (e) => { searchText = e.target.value; renderHomeList(); }); // local filter only — no refetch, no shake
+  // USN fields: no input handler needed — the fields already show uppercase via
+  // text-transform, and both submit handlers read the value with .toUpperCase().
+  // (Rewriting the value on every keystroke used to jump the cursor to the end.)
   $("upCategory").addEventListener("change", (e) => { $("upOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpCategory").addEventListener("change", (e) => { $("cpOthersWrap").hidden = e.target.value !== "Others"; });
   $("cpFoundYesNo").addEventListener("change", (e) => { $("cpPickWrap").hidden = e.target.value !== "Yes"; });
