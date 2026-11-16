@@ -25,7 +25,7 @@
 |---|---|
 | **App** | NCET Lost & Found — plain HTML/CSS/JS, no build step |
 | **Live** | [lostlink-ncet.onrender.com](https://lostlink-ncet.onrender.com) (also on [GitHub Pages](https://1nc24cs146-cmyk.github.io/NCET-LOST-AND-FOUND/index.html)) |
-| **Team** | Team LostLink — INNOVATE 2.0 Hackathon, 14 Nov 2026 |
+| **Developed by** | Nitinkumar H — INNOVATE 2.0 Hackathon, 14 Nov 2026 |
 | **College** | Nagarjuna College of Engineering & Technology (NCET), Devanahalli, Bengaluru |
 | **Domain** | Web, Mobile & Cloud |
 | **Stack** | Supabase for everything — Auth, Postgres, Storage |
@@ -35,14 +35,7 @@
 
 You lose an ID card, a charger, a book — and instead of a scattered WhatsApp group, you get it back through a match you confirm yourself.
 
-## 👥 Team LostLink
-
-| Role | Name |
-|---|---|
-| Developer, Authentication, Security, Database | **Nitinkumar H** |
-| Frontend | **Sanjay N V** |
-| Deployment | **Kiran M M** |
-| Mailing Services | **Murtuza Hussain** |
+**Developed by Nitinkumar H**
 
 ## 🌟 Why LostLink?
 
@@ -218,4 +211,4 @@ Demo flow to try: Create an account with your own NCET mail → Upload a found i
 
 ---
 
-*LostLink — Team LostLink, INNOVATE 2.0 Hackathon, NCET. Find It. Match It. Get It Back.*
+*LostLink — developed by Nitinkumar H, INNOVATE 2.0 Hackathon, NCET. Find It. Match It. Get It Back.*

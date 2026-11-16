@@ -1,4 +1,4 @@
-// LostLink — NCET Lost & Found | Team LostLink, INNOVATE 2.0, 14 Nov 2026
+// LostLink — NCET Lost & Found | Developed by Nitinkumar H, INNOVATE 2.0, 14 Nov 2026
 // Plain HTML/CSS/JS, no build step. Supabase for auth + database + storage;
 // Demo Mode (localStorage, dummy data only) when supabase.js is still a placeholder.
 import { supabase, isSupabaseConfigured, uploadPhotoToSupabase, BREVO_API_KEY, BREVO_SENDER, isEmailConfigured } from "./supabase.js";
