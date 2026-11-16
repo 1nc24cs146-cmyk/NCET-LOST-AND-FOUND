@@ -442,7 +442,6 @@ function showView(name) {
   // Nothing works until the user is logged in — no demo logins, no guest access.
   if (!currentUser && name !== "welcome" && name !== "login") name = "welcome";
   if (currentUser?.role === "hod" && name === "complaint") name = "home"; // HODs post found items; they never raise complaints
-  if (currentUser?.role === "hod" && name === "matches") name = "home"; // HODs have no matches of their own — claims wait in their Profile
   // Mobile is compulsory — a user without a saved mobile number stays on Profile until they add one.
   if (currentUser && !currentUser.mobile && name !== "profile") name = "profile";
   // Feedback is compulsory — an owner with a delivered item and no feedback stays on Matches until they fill it in.
@@ -471,9 +470,6 @@ function renderHeader() {
   // HODs never raise complaints — hide the Lost tab for them.
   const lostBtn = document.querySelector('#bottomNav button[data-view="complaint"]');
   if (lostBtn) lostBtn.hidden = logged && currentUser?.role === "hod";
-  // HODs only upload found items — hide the Matches tab and the complaint button too.
-  const matchesBtn = document.querySelector('#bottomNav button[data-view="matches"]');
-  if (matchesBtn) matchesBtn.hidden = logged && currentUser?.role === "hod";
   const gc = $("goComplaintBtn");
   if (gc) gc.hidden = logged && currentUser?.role === "hod";
   // On the Welcome screen, a signed-in user sees a welcome-back card,
@@ -574,7 +570,10 @@ async function renderComplaintPage() {
 }
 async function renderMatches() {
   const wrap = $("matchesList"); wrap.innerHTML = "<p class='muted'>Loading…</p>";
-  const matches = currentUser ? await DB.listMatches(currentUser.uid) : [];
+  const isHod = currentUser?.role === "hod";
+  // HODs see the matches on the items their own department uploaded, so they
+  // can follow each claim to delivery; students see only their own matches.
+  const matches = currentUser ? (isHod ? (await DB.listAllMatches()).filter((m) => m.finderUid === currentUser.uid) : await DB.listMatches(currentUser.uid)) : [];
   const found = await DB.listFoundPublic();
   const feedback = await DB.listFeedback();
   // Re-check the compulsory-feedback flag with the data already loaded.
@@ -584,7 +583,7 @@ async function renderMatches() {
     if (!f || f.status !== "Delivered to Owner") return false;
     return !feedback.some((x) => x.foundItemId === m.foundItemId && x.authorUid === currentUser.uid);
   });
-  if (!matches.length) { wrap.innerHTML = `<div class="card"><p class="muted">No matches yet. Raise a complaint with a detailed description and matching items will appear here.</p></div>`; }
+  if (!matches.length) { wrap.innerHTML = `<div class="card"><p class="muted">${isHod ? "No matches yet. When a student confirms one of your uploaded items as theirs, it will appear here." : "No matches yet. Raise a complaint with a detailed description and matching items will appear here."}</p></div>`; }
   else {
     wrap.innerHTML = "";
     for (const m of matches) {
