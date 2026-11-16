@@ -46,7 +46,7 @@ You lose an ID card, a charger, a book — and instead of a scattered WhatsApp g
 ## 🚀 Quick start
 
 1. **Open the app:** [lostlink-ncet.onrender.com](https://lostlink-ncet.onrender.com)
-2. **Log in** — tap the orange **Login with College Email** button, then the orange **Continue with NCET Mail** button and pick your NCET Google account. Only NCET mails are accepted for login.
+2. **Log in** — tap the orange **Login with College Email** button, then the orange **Continue with NCET Mail** button and pick your NCET Google account. Only for NCET students — login with NCET Gmail only.
 3. **Found something?** Tap **Report Found Item** — item name, category, where you found it, which department to collect it from, and a photo.
 4. **Lost something?** Tap **Raise a Complaint** — item name, category, and a description only you can see.
 5. **Check My Matches.** A possible match appears there, with the finder's photo. Tick the confirmation line and tap **Yes, this is my item**.
@@ -75,7 +75,7 @@ That's it. No install, no extra app.
 
 ## 🔐 Login — college email only
 
-- **Students log in only with Gmail.** Tap the orange **Continue with NCET Mail** button and pick your NCET Google account — no password, no Create Account form. Only NCET mails are accepted for login. The returned email is still checked with the strict USN rule below; a non-USN or non-ncetmail account is signed out again and rejected.
+- **Students log in only with Gmail.** Tap the orange **Continue with NCET Mail** button and pick your NCET Google account — no password, no Create Account form. Only for NCET students — login with NCET Gmail only. The returned email is still checked with the strict USN rule below; a non-USN or non-ncetmail account is signed out again and rejected.
 - **Mobile number is compulsory.** Every user must save a 10-digit mobile number in their Profile before they can use the app — without one, the app keeps them on the Profile page. The other party needs it to contact them after a match.
 - **HODs log in with a password** — see the HOD login section below.
 
