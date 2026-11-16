@@ -524,9 +524,6 @@ async function renderComplaintPage() {
   $("myComplaints").innerHTML = mine.length ? mine.map((c) => `<div class="card"><p class="item-title">${esc(c.itemName)}</p><p class="item-meta">${esc(c.category)} • ${esc(c.date || "")}</p><p><span class="badge badge-match">${esc(c.matchStatus || "Waiting for Match")}</span> <span class="badge ${c.itemStatus === "Delivered to Owner" ? "badge-delivered" : "badge-pending"}">${esc(c.itemStatus || "Pending")}</span></p></div>`).join("") :
     `<div class="card"><p class="muted">No complaints yet. Raise one above.</p></div>`;
 }
-function whatsappText(m, found) {
-  return `LostLink — NCET: Your item has been matched.\nItem: ${found.itemName} (${found.category})\nOwner USN: ${m.ownerUsn} | Finder USN: ${m.finderUsn}\nCollect from: ${found.collectDept} department\nStatus: Pending — please collect and confirm in the app.`;
-}
 async function renderMatches() {
   const wrap = $("matchesList"); wrap.innerHTML = "<p class='muted'>Loading…</p>";
   const matches = currentUser ? await DB.listMatches(currentUser.uid) : [];
@@ -549,26 +546,9 @@ async function renderMatches() {
           <div class="error" id="err-${m.id}"></div>`;
       }
       if (m.status === "Confirmed") {
-        // WhatsApp preview — mobiles are readable only after confirmation.
-        const ownerPriv = await DB.getPrivate("complaint", m.complaintId, currentUser.uid);
-        const finderPriv = await DB.getPrivate("found", m.foundItemId, currentUser.uid);
-        const ownerMobile = ownerPriv?.mobile || ""; const finderMobile = finderPriv?.mobile || "";
-        // Both users get each other's details — name, USN, mobile + the item info.
-        // Names come from the profiles (a matched party can read the other party's
-        // profile — see the "Matched parties" policy in supabase-schema.sql);
-        // the finder's name also sits on the found item itself.
-        const ownerProfile = await DB.getProfile(m.ownerUid).catch(() => null);
-        const finderProfile = await DB.getProfile(m.finderUid).catch(() => null);
-        const ownerName = ownerProfile?.name || m.ownerUsn;
-        const finderName = finderProfile?.name || f.finderName || m.finderUsn;
-        html += `<div class="card" style="background:var(--page)"><b>Each other's details</b>
-          <p><b>Owner:</b> ${esc(ownerName)} (${esc(m.ownerUsn)})${ownerMobile ? ` — 📱 ${esc(ownerMobile)}` : ""}</p>
-          <p><b>Finder:</b> ${esc(finderName)} (${esc(m.finderUsn)})${finderMobile ? ` — 📱 ${esc(finderMobile)}` : ""}</p>
-          <p><b>Item:</b> ${esc(f.itemName)} (${esc(f.category)}) — found at ${esc(f.placeFound || "")}, collect from ${esc(f.collectDept || "")} department</p></div>`;
-        const otherMobile = isOwner ? finderMobile : ownerMobile;
-        const text = whatsappText(m, f);
-        html += `<div class="card" style="background:var(--page)"><b>WhatsApp message (preview)</b><p style="white-space:pre-line">${esc(text)}</p>
-          ${otherMobile ? `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" href="https://wa.me/91${otherMobile}?text=${encodeURIComponent(text)}">Message on WhatsApp</a>` : `<p class="note">The other person's number will appear here once both sides have saved it.</p>`}</div>`;
+        // The other person's details are NEVER shown in the app — only in the
+        // confirmation mail on Gmail, after the owner confirms the match.
+        html += `<p class="note">Confirmed — each other's details (name, USN, mobile, item info) are in your confirmation mail on Gmail. Please check your inbox.</p>`;
         if (isOwner && f.status !== "Delivered to Owner")
           html += (f.finderUsn || "").startsWith("HOD-")
             ? `<p class="note">Confirmed — waiting for the HOD of the ${esc(f.collectDept || "")} department to accept the handover.</p>`

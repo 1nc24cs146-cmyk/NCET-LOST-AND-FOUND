@@ -38,7 +38,7 @@ You lose an ID card, a charger, a book — and instead of a scattered WhatsApp g
 ## 🌟 Why LostLink?
 
 - **No more WhatsApp groups.** Found items and lost complaints live in one place, on campus, for NCET students only.
-- **Private by design.** A found item's description and the finder's mobile number are hidden from everyone except its real owner — and the other side only after a confirmed match.
+- **Private by design.** A found item's description and the finder's mobile number are hidden from everyone except its real owner — the other side only gets them in the confirmation mail on Gmail, after a confirmed match. The app itself never shows the other person's details.
 - **You confirm by looking.** The match card shows the finder's photo, so you confirm it is really yours before you accept.
 - **Nothing to install.** It is a mobile-first web app — open the link, log in, done.
 - **It remembers you.** Log in once and the app keeps you signed in on that site, so you never log in again and again.
@@ -50,7 +50,7 @@ You lose an ID card, a charger, a book — and instead of a scattered WhatsApp g
 3. **Found something?** Tap **Report Found Item** — item name, category, where you found it, which department to collect it from, and a photo.
 4. **Lost something?** Tap **Raise a Complaint** — item name, category, and a description only you can see.
 5. **Check My Matches.** A possible match appears there, with the finder's photo. Tick the confirmation line and tap **Yes, this is my item**.
-6. **That's it — Delivered to Owner.** Accepting the match marks the item Delivered to Owner straight away, and both sides get a WhatsApp message and an email. Both users then see each other's details — name, USN, mobile number and the item info — on the Matches page and in the email. Give feedback after that.
+6. **That's it — Delivered to Owner.** Accepting the match marks the item Delivered to Owner straight away, and both sides get a WhatsApp message and an email. Each other's details — name, USN, mobile number and the item info — come only in the confirmation mail on Gmail, never in the app. Give feedback after that.
 
 That's it. No install, no extra app.
 
@@ -70,7 +70,7 @@ That's it. No install, no extra app.
 1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo — tap **Take Photo** to use the phone camera or **Upload Photo** to pick one from the gallery, with a preview before posting. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table. Every found item card on the Home board shows how many complaints were raised for that item ("2 complaints raised for this item", or "No complaints raised for this item yet").
 2. **An owner raises a complaint.** Item name, category, and a description only the owner can see. The owner gets an email the moment the complaint is raised.
 3. **The app matches them.** Same item name + category, or a close description match, creates a Possible Match — visible only to that owner, with the finder's photo. Both sides get an email.
-4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Once confirmed, both users see each other's details — name, USN, mobile number and the item info — on the Matches page and in the email. Tap **No, this is not mine** and the match is rejected.
+4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Each other's details — name, USN, mobile number and the item info — are sent only in the confirmation mail on Gmail, after the owner confirms. The app never shows the other person's details. Tap **No, this is not mine** and the match is rejected.
 5. **Feedback.** After delivery, the owner can rate the return and say how it went.
 
 ## 🔐 Login — college email only
@@ -148,7 +148,7 @@ Auth, database and storage are all Supabase (project `lostlink-ncet`, South Asia
 - Descriptions and mobile numbers live in private tables, readable only by the owner — and by the other party only after a Confirmed match.
 - **Once a complaint is matched, the found item leaves the public board and the match shows only in that complaint owner's Profile and Matches — the finder and nobody else can see anything about the matched item.** If the owner says "this is not mine", the match is rejected and the item comes back on the board.
 
-Public lists show only item, category, place found, date, photo and status. Full descriptions and mobile numbers live only in `found_items_private` and `complaints_private`, readable only by the owner — and by the other party only after a Confirmed match. This is enforced by Row Level Security in `supabase-schema.sql` and in the app code (public lists never fetch private data).
+Public lists show only item, category, place found, date, photo and status. Full descriptions and mobile numbers live only in `found_items_private` and `complaints_private`, readable only by the owner — and by the other party only after a Confirmed match, so the confirmation mail can carry each other's details. This is enforced by Row Level Security in `supabase-schema.sql` and in the app code (public lists never fetch private data, and the Matches page never shows the other person's details).
 
 ## 💻 How to run
 
