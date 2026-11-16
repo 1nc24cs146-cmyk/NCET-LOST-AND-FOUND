@@ -21,6 +21,9 @@ export function hodFromEmail(email) {
 }
 export const isHodEmail = (email) => !!hodFromEmail(email);
 const HOD_COLLECT_DEPT = { cs:"CSE", is:"ISE", cd:"CSE (Data Science)", ci:"CSE (AI/ML)", ec:"ECE", cv:"Civil", ic:"CSE (IoT & Cyber Security)" };
+// Short department codes for the HOD header: Dept-CSE, Dept-ISE, Dept-AIML, Dept-IOT, Dept-DS, Dept-EC, Dept-CV.
+const HOD_SHORT = { cs:"CSE", is:"ISE", cd:"DS", ci:"AIML", ec:"EC", cv:"CV", ic:"IOT" };
+const hodLabel = (u) => "Dept-" + (HOD_SHORT[u.branchCode] || u.department);
 export const CATEGORIES = ["Charger","Adapter","ID Card","Books","Laptop Charger","Laptop","Sports Item","Others"];
 export const COLLECT_DEPTS = ["CSE","CSE (AI/ML)","ECE","ISE","CSE (Data Science)","Civil","CSE (IoT & Cyber Security)","BCA","MBA","MCA"];
 
@@ -480,11 +483,11 @@ function renderHeader() {
     wb.hidden = !logged;
     if (logged) {
       $("welcomeBackName").textContent = currentUser.name || "Student";
-      $("welcomeBackUsn").textContent = currentUser.usn || "";
+      $("welcomeBackUsn").textContent = currentUser.role === "hod" ? hodLabel(currentUser) : (currentUser.usn || "");
     }
   }
   if (logged) {
-    $("headerUsn").textContent = currentUser.usn + " • " + currentUser.department;
+    $("headerUsn").textContent = currentUser.role === "hod" ? hodLabel(currentUser) : currentUser.usn + " • " + currentUser.department;
     const av = $("headerAvatar");
     av.textContent = (currentUser.name || currentUser.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   }
@@ -677,7 +680,7 @@ async function renderProfile() {
   const u = currentUser;
   $("profileAvatar").textContent = (u.name || u.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   $("profileName").textContent = u.name || "Not added yet — tap Edit Profile";
-  $("profileSub").textContent = `${u.usn} • ${u.department} (${u.branchCode.toUpperCase()})`;
+  $("profileSub").textContent = u.role === "hod" ? hodLabel(u) : `${u.usn} • ${u.department} (${u.branchCode.toUpperCase()})`;
   // The edit form opens by itself when the mobile is missing (compulsory),
   // otherwise it stays behind the Edit Profile button.
   $("profileForm").hidden = !!u.mobile;
