@@ -37,6 +37,15 @@ You lose an ID card, a charger, a book — and instead of a scattered WhatsApp g
 
 **Developed by Nitinkumar H**
 
+## 👥 Team Members
+
+| Name | Work |
+|---|---|
+| Nitinkumar H | Developer, Authentication, Security, Database |
+| Sanjay N V | Frontend |
+| Kiran M M | Deployment |
+| Murtuza Hussain | Mailing Services |
+
 ## 🌟 Why LostLink?
 
 - **No more WhatsApp groups.** Found items and lost complaints live in one place, on campus, for NCET students only.
