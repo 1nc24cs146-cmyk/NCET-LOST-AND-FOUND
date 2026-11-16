@@ -89,6 +89,7 @@ async function sendMail(to, subject, html) {
 const mailWrap = (title, body) => `<div style="font-family:Arial,sans-serif;color:#0e2455"><h2 style="color:#0e2455">${title}</h2><p>${body}</p><p style="color:#666;font-size:13px">LostLink — NCET Lost &amp; Found<br>Nagarjuna College of Engineering &amp; Technology, Devanahalli, Bengaluru</p></div>`;
 
 let currentUser = null; // {uid,email,usn,department,branchCode,year,name,mobile,role}
+let feedbackDue = false; // true when the owner has a delivered item with no feedback yet — feedback is compulsory
 let selectedPhoto = null; // the photo picked via Take Photo or Upload Photo
 let activeCategory = "All";
 let searchText = "";
@@ -416,12 +417,32 @@ async function runMatchingForFound(foundId) {
 /* ---------- UI helpers ---------- */
 const $ = (id) => document.getElementById(id);
 const views = ["welcome","login","home","upload","complaint","matches","profile"];
+// Feedback is compulsory: after an item is delivered, its owner must fill the
+// feedback form before using the rest of the app. Checked at login and after
+// every delivery / feedback submit; showView enforces it.
+async function refreshFeedbackDue() {
+  if (!currentUser) { feedbackDue = false; return; }
+  try {
+    const matches = await DB.listMatches(currentUser.uid);
+    const feedback = await DB.listFeedback();
+    const found = await DB.listFoundPublic();
+    feedbackDue = matches.some((m) => {
+      if (m.ownerUid !== currentUser.uid || m.status !== "Confirmed") return false;
+      const f = found.find((x) => x.id === m.foundItemId);
+      if (!f || f.status !== "Delivered to Owner") return false; // only after delivery, not while waiting for the HOD or the handover
+      return !feedback.some((x) => x.foundItemId === m.foundItemId && x.authorUid === currentUser.uid);
+    });
+  } catch (e) { feedbackDue = false; }
+}
+
 function showView(name) {
   // Nothing works until the user is logged in — no demo logins, no guest access.
   if (!currentUser && name !== "welcome" && name !== "login") name = "welcome";
   if (currentUser?.role === "hod" && name === "complaint") name = "home"; // HODs post found items; they never raise complaints
   // Mobile is compulsory — a user without a saved mobile number stays on Profile until they add one.
   if (currentUser && !currentUser.mobile && name !== "profile") name = "profile";
+  // Feedback is compulsory — an owner with a delivered item and no feedback stays on Matches until they fill it in.
+  if (feedbackDue && name !== "matches") name = "matches";
   views.forEach((v) => $("view-" + v).classList.toggle("active", v === name));
   document.querySelectorAll("#bottomNav button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
@@ -529,6 +550,13 @@ async function renderMatches() {
   const matches = currentUser ? await DB.listMatches(currentUser.uid) : [];
   const found = await DB.listFoundPublic();
   const feedback = await DB.listFeedback();
+  // Re-check the compulsory-feedback flag with the data already loaded.
+  feedbackDue = matches.some((m) => {
+    if (m.ownerUid !== currentUser.uid || m.status !== "Confirmed") return false;
+    const f = found.find((x) => x.id === m.foundItemId);
+    if (!f || f.status !== "Delivered to Owner") return false;
+    return !feedback.some((x) => x.foundItemId === m.foundItemId && x.authorUid === currentUser.uid);
+  });
   if (!matches.length) { wrap.innerHTML = `<div class="card"><p class="muted">No matches yet. Raise a complaint with a detailed description and matching items will appear here.</p></div>`; }
   else {
     wrap.innerHTML = "";
@@ -553,7 +581,7 @@ async function renderMatches() {
           html += (f.finderUsn || "").startsWith("HOD-")
             ? `<p class="note">Confirmed — waiting for the HOD of the ${esc(f.collectDept || "")} department to accept the handover.</p>`
             : `<button class="btn btn-primary" id="got-${m.id}">I received my item</button>`;
-        if (f.status === "Delivered to Owner") html += `<p class="ok">✓ Delivered to Owner</p>` + feedbackFormHtml(m, f, feedback);
+        if (f.status === "Delivered to Owner") html += `<p class="ok">✓ Delivered to Owner</p>` + (isOwner ? feedbackFormHtml(m, f, feedback) : "");
       }
       card.innerHTML = html; wrap.appendChild(card);
       const yes = $("yes-" + m.id), no = $("no-" + m.id);
@@ -570,6 +598,7 @@ async function renderMatches() {
         await DB.updateMatch(m.id, { status: "Confirmed" });
         sendMail(usnToEmail(m.finderUsn), "LostLink: your found item reached its owner",
           mailWrap("Delivered to Owner", `Good news — the owner has received the <b>${f ? f.itemName : "item"}</b> you found. Thank you for returning it!`));
+        await refreshFeedbackDue();
         renderMatches(); renderHome();
       };
       const fbForm = card.querySelector("[data-feedback-form]");
@@ -579,6 +608,7 @@ async function renderMatches() {
         if (!rating) { fbForm.querySelector(".error").textContent = "Please give a rating."; return; }
         await DB.submitFeedback({ foundItemId: m.foundItemId, authorUid: currentUser.uid, usn: currentUser.usn, rating,
           returnedSafely: fbForm.returned.value, collection: fbForm.collection.value, message: fbForm.message.value, date: today() });
+        await refreshFeedbackDue();
         renderMatches(); renderFeedbackList();
       });
     }
@@ -588,7 +618,8 @@ async function renderMatches() {
 function feedbackFormHtml(m, f, feedback) {
   const done = feedback.some((x) => x.foundItemId === m.foundItemId && x.authorUid === currentUser.uid);
   if (done) return `<p class="ok">Thank you for your feedback.</p>`;
-  return `<form data-feedback-form><h3>Give Feedback</h3>
+  return `<form data-feedback-form><h3>Give Feedback — compulsory</h3>
+    <p class="note">Please fill this in to finish — feedback is compulsory after delivery.</p>
     <div>${[1,2,3,4,5].map((n) => `<label><input type="radio" name="rating" value="${n}"> ${"★".repeat(n)}</label>`).join(" ")}</div>
     <div class="field"><label>Was the item returned safely?</label><select name="returned"><option>Yes</option><option>No</option></select></div>
     <div class="field"><label>How was the collection from the department?</label><select name="collection"><option>Easy</option><option>Okay</option><option>Difficult</option></select></div>
@@ -634,6 +665,7 @@ async function renderProfile() {
         const m = allMatches.find((x) => x.id === b.dataset.acceptComplaint);
         const f = found.find((x) => x.id === m.foundItemId) || {};
         await confirmMatch(m, f);
+        await refreshFeedbackDue();
         renderProfile(); renderHome();
       });
     }
@@ -677,6 +709,7 @@ async function renderProfile() {
 async function setSession(user) {
   currentUser = user;
   if (DEMO) localStorage.setItem("lostlink_session", JSON.stringify({ uid: user.uid }));
+  await refreshFeedbackDue();
   renderHeader(); showView("home");
 }
 // Validate a Supabase auth user: USN ncetmail only, profile row created on first login.

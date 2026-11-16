@@ -71,7 +71,7 @@ That's it. No install, no extra app.
 2. **An owner raises a complaint.** Item name, category, and a description only the owner can see. The owner gets an email the moment the complaint is raised.
 3. **The app matches them.** Same item name + category, or a close description match, creates a Possible Match — visible only to that owner, with the finder's photo. Both sides get an email.
 4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Each other's details — name, USN, mobile number and the item info — are sent only in the confirmation mail on Gmail, after the owner confirms. The app never shows the other person's details. Tap **No, this is not mine** and the match is rejected.
-5. **Feedback.** After delivery, the owner can rate the return and say how it went.
+5. **Feedback — compulsory.** After delivery, the owner must fill in the feedback form (star rating required) before using the rest of the app — the app keeps them on the Matches page until they do.
 
 ## 🔐 Login — college email only
 
