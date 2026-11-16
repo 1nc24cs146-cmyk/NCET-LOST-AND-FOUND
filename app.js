@@ -905,7 +905,7 @@ async function boot() {
     if (!ok) return;
     const photoFile = selectedPhoto || $("upPhoto").files[0] || $("upPhotoCamera").files[0] || null;
     const id = await DB.createFound(
-      { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? "HOD, " + currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
+      { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
       { mobile: isHod ? (currentUser.mobile || "") : g("upMobile"), description: g("upDesc") }, photoFile);
     await runMatchingForFound(id);
     $("okUpload").textContent = "Item uploaded successfully.";
