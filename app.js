@@ -107,7 +107,7 @@ const toSnakePatch = (patch) => {
   for (const k of Object.keys(patch)) if (map[k] !== undefined) out[map[k]] = patch[k];
   return out;
 };
-const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: isHodEmail(r.email) ? r.department : (r.name || ""), mobile: r.mobile || "", role: isHodEmail(r.email) ? "hod" : "student" } : null; // HODs show only their department name after login — never "HOD"
+const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: isHodEmail(r.email) ? (r.name && !r.name.startsWith("HOD") && r.name !== r.department ? r.name : r.department) : (r.name || ""), mobile: r.mobile || "", role: isHodEmail(r.email) ? "hod" : "student" } : null; // HODs show only their department name after login — never "HOD" — unless they added their own name, which then shows instead
 const mapFound = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, placeFound: r.place_found, dateFound: r.date_found || "", collectDept: r.collect_dept, status: r.status, photoUrl: r.photo_url || "", finderUsn: r.finder_usn, finderName: r.finder_name || "", uploaderName: r.uploader_name || "", uploaderUid: r.uploader_uid });
 const mapComplaint = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, ownerUsn: r.owner_usn, ownerUid: r.owner_uid, foundItemId: r.found_item_id, matchStatus: r.match_status, itemStatus: r.item_status, date: (r.created_at || "").slice(0, 10) });
 const mapMatch = (r) => ({ id: r.id, complaintId: r.complaint_id, foundItemId: r.found_item_id, ownerUid: r.owner_uid, ownerUsn: r.owner_usn, finderUid: r.finder_uid, finderUsn: r.finder_usn, status: r.status });
@@ -688,8 +688,8 @@ async function renderProfile() {
   $("profileDetails").innerHTML = u.role === "hod"
     ? `<p><b>Department:</b> ${esc(u.department)}</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
     : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
-  // HODs only edit their mobile — their name is the department, so no name field for them.
-  $("pfNameField").hidden = u.role === "hod";
+  // HODs can add their own name too — it shows on their Profile (and in the
+  // confirmation mail as the finder) instead of the department name.
   $("pfNote").textContent = u.role === "hod"
     ? "Mobile number is compulsory — you can't use the app until it is saved. Department and department email are locked."
     : "Mobile number is compulsory — you can't use the app until it is saved. USN, college email, department, branch code and year are locked — these come from your college USN email and cannot be changed.";
