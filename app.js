@@ -511,7 +511,7 @@ let homeCache = null; // last fetched board data — search filters from this, n
 function renderHomeList() {
   // Instant, local-only render from the cache: no "Loading…" flash, no network, no shake while typing.
   if (!homeCache) { renderHome(); return; }
-  document.querySelectorAll("#categoryChips .chip").forEach((b) => b.classList.toggle("active", b.dataset.cat === activeCategory));
+  const sel = $("categorySelect"); if (sel) sel.value = activeCategory;
   const isHod = currentUser?.role === "hod";
   const { items, complaintCounts, matchedItemIds, delivered } = homeCache;
   // HODs see ONLY the items their own department uploaded — nothing else.
@@ -530,9 +530,9 @@ function renderHomeList() {
 }
 async function renderHome() {
   const list = $("foundList"); list.innerHTML = "<p class='muted'>Loading…</p>";
-  const chips = $("categoryChips");
-  chips.innerHTML = ["All", ...CATEGORIES].map((c) => `<button type="button" class="chip ${activeCategory === c ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
-  chips.querySelectorAll(".chip").forEach((b) => b.onclick = () => { activeCategory = b.dataset.cat; renderHomeList(); });
+  const sel = $("categorySelect");
+  sel.innerHTML = ["All", ...CATEGORIES].map((c) => `<option value="${esc(c)}" ${activeCategory === c ? "selected" : ""}>${esc(c)}</option>`).join("");
+  sel.onchange = () => { activeCategory = sel.value; renderHomeList(); };
   let items = await DB.listFoundPublic();
   const delivered = items.filter((x) => x.status === "Delivered to Owner");
   // Live hero stats on the Welcome screen (guarded: the hero exists on Welcome only).

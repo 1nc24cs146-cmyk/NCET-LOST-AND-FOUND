@@ -47,8 +47,6 @@ button{font:inherit;cursor:pointer}
 .error{color:#b91c1c;font-size:13px;margin-top:4px;min-height:16px}
 .ok{color:#166534;font-size:14px}
 .muted{color:var(--muted);font-size:14px}
-.chip{display:inline-block;padding:7px 12px;border:1px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);margin:0 6px 6px 0;min-height:36px}
-.chip.active{background:var(--orange);border-color:var(--orange);color:#fff}
 .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
 .badge-pending{background:#fff3e0;color:#92400e;border:1px solid var(--orange)}
 .badge-delivered{background:var(--navy);color:#fff}
