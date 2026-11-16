@@ -442,6 +442,7 @@ function showView(name) {
   // Nothing works until the user is logged in — no demo logins, no guest access.
   if (!currentUser && name !== "welcome" && name !== "login") name = "welcome";
   if (currentUser?.role === "hod" && name === "complaint") name = "home"; // HODs post found items; they never raise complaints
+  if (currentUser?.role === "hod" && name === "matches") name = "home"; // HODs have no matches of their own — claims wait in their Profile
   // Mobile is compulsory — a user without a saved mobile number stays on Profile until they add one.
   if (currentUser && !currentUser.mobile && name !== "profile") name = "profile";
   // Feedback is compulsory — an owner with a delivered item and no feedback stays on Matches until they fill it in.
@@ -470,6 +471,11 @@ function renderHeader() {
   // HODs never raise complaints — hide the Lost tab for them.
   const lostBtn = document.querySelector('#bottomNav button[data-view="complaint"]');
   if (lostBtn) lostBtn.hidden = logged && currentUser?.role === "hod";
+  // HODs only upload found items — hide the Matches tab and the complaint button too.
+  const matchesBtn = document.querySelector('#bottomNav button[data-view="matches"]');
+  if (matchesBtn) matchesBtn.hidden = logged && currentUser?.role === "hod";
+  const gc = $("goComplaintBtn");
+  if (gc) gc.hidden = logged && currentUser?.role === "hod";
   // On the Welcome screen, a signed-in user sees a welcome-back card,
   // never the Login / Create Account buttons again.
   const wa = $("welcomeAuth"), wb = $("welcomeBack");
@@ -507,12 +513,21 @@ function renderHomeList() {
   // Instant, local-only render from the cache: no "Loading…" flash, no network, no shake while typing.
   if (!homeCache) { renderHome(); return; }
   document.querySelectorAll("#categoryChips .chip").forEach((b) => b.classList.toggle("active", b.dataset.cat === activeCategory));
+  const isHod = currentUser?.role === "hod";
   const { items, complaintCounts, matchedItemIds, delivered } = homeCache;
-  const active = items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id));
+  // HODs see ONLY the items their own department uploaded — nothing else.
+  // Their list includes delivered items too, so the status badge on each card
+  // (Pending / Delivered to Owner) answers "did anyone get it?" at a glance.
+  const mine = isHod ? items.filter((x) => x.uploaderUid === currentUser.uid) : items;
+  const active = isHod ? mine : items.filter((x) => x.status !== "Delivered to Owner" && !matchedItemIds.has(x.id));
+  $("homeTitle").textContent = isHod ? "Items Uploaded by You" : "Found Items";
   const filtered = active.filter((x) => (activeCategory === "All" || x.category === activeCategory) && (!searchText || x.itemName.toLowerCase().includes(searchText.toLowerCase())));
-  $("foundList").innerHTML = filtered.length ? filtered.map((f) => itemCard(f, true, complaintCounts[f.id] || 0)).join("") :
+  $("foundList").innerHTML = filtered.length ? filtered.map((f) => itemCard(f, !isHod, complaintCounts[f.id] || 0)).join("") :
     `<div class="card"><p>No found items match yet.</p><button class="btn btn-primary btn-small" onclick="document.getElementById('goUploadBtn').click()">Upload Found Item</button></div>`;
-  $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false, complaintCounts[f.id] || 0)).join("") : "<p class='muted'>No delivered items yet.</p>";
+  // HODs get no separate delivered history — delivered items are in their main list.
+  $("deliveredTitle").hidden = isHod;
+  $("deliveredList").hidden = isHod;
+  if (!isHod) $("deliveredList").innerHTML = delivered.length ? delivered.map((f) => itemCard(f, false, complaintCounts[f.id] || 0)).join("") : "<p class='muted'>No delivered items yet.</p>";
 }
 async function renderHome() {
   const list = $("foundList"); list.innerHTML = "<p class='muted'>Loading…</p>";
