@@ -87,7 +87,6 @@ button{font:inherit;cursor:pointer}
 /* Direct login with NCET Mail (Google) */
 .btn-google{background:var(--orange);color:#fff;border:none;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 16px rgba(240,88,25,.35)}
 .btn-google:hover{background:var(--orange-hover)}
-.g-logo{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #4285F4;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none}
 .divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:14px 0}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
