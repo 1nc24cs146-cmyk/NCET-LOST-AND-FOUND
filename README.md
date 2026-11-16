@@ -35,6 +35,15 @@
 
 You lose an ID card, a charger, a book — and instead of a scattered WhatsApp group, you get it back through a match you confirm yourself.
 
+## 👥 Team LostLink
+
+| Role | Name |
+|---|---|
+| Developer, Authentication, Security, Database | **Nitinkumar H** |
+| Frontend | **Sanjay N V** |
+| Deployment | **Kiran M M** |
+| Mailing Services | **Murtuza Hussain** |
+
 ## 🌟 Why LostLink?
 
 - **No more WhatsApp groups.** Found items and lost complaints live in one place, on campus, for NCET students only.
