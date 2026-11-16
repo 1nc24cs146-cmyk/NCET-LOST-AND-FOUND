@@ -353,19 +353,28 @@ function fileToDataUrl(f) { return new Promise((res, rej) => { const r = new Fil
 async function confirmMatch(m, f) {
   const isHodItem = (f.finderUsn || "").startsWith("HOD-");
   await DB.updateMatch(m.id, { status: "Confirmed", confirmedAt: Date.now() });
+  // Both users get each other's details in the mail — name, USN, mobile + the item info.
+  let ownerName = m.ownerUsn, finderName = f.finderName || m.finderUsn, ownerMobile = "", finderMobile = "";
+  try {
+    const op = await DB.getProfile(m.ownerUid); if (op?.name) ownerName = op.name;
+    const fp = await DB.getProfile(m.finderUid); if (fp?.name) finderName = fp.name;
+    const oPriv = await DB.getPrivate("complaint", m.complaintId, m.ownerUid); if (oPriv?.mobile) ownerMobile = oPriv.mobile;
+    const fPriv = await DB.getPrivate("found", m.foundItemId, m.finderUid); if (fPriv?.mobile) finderMobile = fPriv.mobile;
+  } catch (e) { console.warn("Contact details failed to load:", e); }
+  const details = `<br><br><b>Item:</b> ${f ? f.itemName : "your item"} (${f ? f.category : ""}) — found at ${f ? f.placeFound || "" : ""}, collect from ${f ? f.collectDept || "" : ""} department.<br><b>Owner:</b> ${ownerName} (${m.ownerUsn})${ownerMobile ? `, mobile ${ownerMobile}` : ""}<br><b>Finder:</b> ${finderName} (${m.finderUsn})${finderMobile ? `, mobile ${finderMobile}` : ""}`;
   if (isHodItem) {
     await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
     sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-      mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.`));
+      mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.${details}`));
     sendMail(usnToEmail(m.finderUsn), "LostLink: a student confirmed your department item",
-      mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.`));
+      mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.${details}`));
   } else {
     await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
     await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
     sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-      mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.`));
+      mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.${details}`));
     sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
-      mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.`));
+      mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.${details}`));
   }
 }
 
@@ -411,6 +420,8 @@ function showView(name) {
   // Nothing works until the user is logged in — no demo logins, no guest access.
   if (!currentUser && name !== "welcome" && name !== "login") name = "welcome";
   if (currentUser?.role === "hod" && name === "complaint") name = "home"; // HODs post found items; they never raise complaints
+  // Mobile is compulsory — a user without a saved mobile number stays on Profile until they add one.
+  if (currentUser && !currentUser.mobile && name !== "profile") name = "profile";
   views.forEach((v) => $("view-" + v).classList.toggle("active", v === name));
   document.querySelectorAll("#bottomNav button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
@@ -542,6 +553,18 @@ async function renderMatches() {
         const ownerPriv = await DB.getPrivate("complaint", m.complaintId, currentUser.uid);
         const finderPriv = await DB.getPrivate("found", m.foundItemId, currentUser.uid);
         const ownerMobile = ownerPriv?.mobile || ""; const finderMobile = finderPriv?.mobile || "";
+        // Both users get each other's details — name, USN, mobile + the item info.
+        // Names come from the profiles (a matched party can read the other party's
+        // profile — see the "Matched parties" policy in supabase-schema.sql);
+        // the finder's name also sits on the found item itself.
+        const ownerProfile = await DB.getProfile(m.ownerUid).catch(() => null);
+        const finderProfile = await DB.getProfile(m.finderUid).catch(() => null);
+        const ownerName = ownerProfile?.name || m.ownerUsn;
+        const finderName = finderProfile?.name || f.finderName || m.finderUsn;
+        html += `<div class="card" style="background:var(--page)"><b>Each other's details</b>
+          <p><b>Owner:</b> ${esc(ownerName)} (${esc(m.ownerUsn)})${ownerMobile ? ` — 📱 ${esc(ownerMobile)}` : ""}</p>
+          <p><b>Finder:</b> ${esc(finderName)} (${esc(m.finderUsn)})${finderMobile ? ` — 📱 ${esc(finderMobile)}` : ""}</p>
+          <p><b>Item:</b> ${esc(f.itemName)} (${esc(f.category)}) — found at ${esc(f.placeFound || "")}, collect from ${esc(f.collectDept || "")} department</p></div>`;
         const otherMobile = isOwner ? finderMobile : ownerMobile;
         const text = whatsappText(m, f);
         html += `<div class="card" style="background:var(--page)"><b>WhatsApp message (preview)</b><p style="white-space:pre-line">${esc(text)}</p>
@@ -604,6 +627,7 @@ async function renderProfile() {
   $("profileAvatar").textContent = (u.name || u.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   $("profileName").textContent = u.name || "Not added yet — tap Edit Profile";
   $("profileSub").textContent = `${u.usn} • ${u.department} (${u.branchCode.toUpperCase()})`;
+  $("profileMobileNotice").hidden = !!u.mobile; // compulsory mobile — the notice stays until one is saved
   $("profileDetails").innerHTML = u.role === "hod"
     ? `<p><b>Role:</b> HOD — ${esc(u.department)} Department</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
     : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;

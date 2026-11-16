@@ -104,6 +104,18 @@ create policy "Users can insert own profile" on public.users
 drop policy if exists "Users can update own profile" on public.users;
 create policy "Users can update own profile" on public.users
   for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+-- Matched parties can read each other's profile (name, USN, mobile) once a match
+-- is Confirmed, so both sides see each other's contact details. Nothing else
+-- is shared: a profile is still hidden from everyone else.
+drop policy if exists "Matched parties can view each other's profile" on public.users;
+create policy "Matched parties can view each other's profile" on public.users
+  for select to authenticated using (
+    id in (
+      select owner_uid from public.matches where finder_uid = auth.uid() and status = 'Confirmed'
+      union
+      select finder_uid from public.matches where owner_uid = auth.uid() and status = 'Confirmed'
+    )
+  );
 
 -- found_items: any authenticated user can view; only the uploader can insert/update
 drop policy if exists "Authenticated can view found items" on public.found_items;
