@@ -46,11 +46,11 @@ You lose an ID card, a charger, a book — and instead of a scattered WhatsApp g
 ## 🚀 Quick start
 
 1. **Open the app:** [lostlink-ncet.onrender.com](https://lostlink-ncet.onrender.com)
-2. **Create an account** with your USN college email (for example `1nc24cs146@ncetmail.com`) and a password, or tap **Continue with NCET Mail** to sign in with Google.
+2. **Log in** — tap the orange **Login with College Email** button, then the orange **Continue with NCET Mail** button and pick your NCET Google account. Only NCET mails are accepted for login.
 3. **Found something?** Tap **Report Found Item** — item name, category, where you found it, which department to collect it from, and a photo.
 4. **Lost something?** Tap **Raise a Complaint** — item name, category, and a description only you can see.
 5. **Check My Matches.** A possible match appears there, with the finder's photo. Tick the confirmation line and tap **Yes, this is my item**.
-6. **That's it — Delivered to Owner.** Accepting the match marks the item Delivered to Owner straight away, and both sides get a WhatsApp message and an email. Give feedback after that.
+6. **That's it — Delivered to Owner.** Accepting the match marks the item Delivered to Owner straight away, and both sides get a WhatsApp message and an email. Both users then see each other's details — name, USN, mobile number and the item info — on the Matches page and in the email. Give feedback after that.
 
 That's it. No install, no extra app.
 
@@ -70,12 +70,13 @@ That's it. No install, no extra app.
 1. **A finder posts a found item.** Item name, category, place found, collect-from department, and a photo — tap **Take Photo** to use the phone camera or **Upload Photo** to pick one from the gallery, with a preview before posting. The photo goes to the public Supabase Storage bucket `item-photos`; the description and mobile number go to a private table. Every found item card on the Home board shows how many complaints were raised for that item ("2 complaints raised for this item", or "No complaints raised for this item yet").
 2. **An owner raises a complaint.** Item name, category, and a description only the owner can see. The owner gets an email the moment the complaint is raised.
 3. **The app matches them.** Same item name + category, or a close description match, creates a Possible Match — visible only to that owner, with the finder's photo. Both sides get an email.
-4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Tap **No, this is not mine** and the match is rejected.
+4. **The owner confirms.** On the Matches page, tick the line and tap **Yes, this is my item** — or accept the same match from their own Profile, under **My Complaints**, where the matched item's photo is shown next to the Accept button. Both sides get a WhatsApp message and an email, and the item is marked **Delivered to Owner** straight away. Once confirmed, both users see each other's details — name, USN, mobile number and the item info — on the Matches page and in the email. Tap **No, this is not mine** and the match is rejected.
 5. **Feedback.** After delivery, the owner can rate the return and say how it went.
 
 ## 🔐 Login — college email only
 
-- **Students log in only with Gmail.** Tap **Continue with NCET Mail** and pick your NCET Google account — no password, no Create Account form. The returned email is still checked with the strict USN rule below; a non-USN or non-ncetmail account is signed out again and rejected.
+- **Students log in only with Gmail.** Tap the orange **Continue with NCET Mail** button and pick your NCET Google account — no password, no Create Account form. Only NCET mails are accepted for login. The returned email is still checked with the strict USN rule below; a non-USN or non-ncetmail account is signed out again and rejected.
+- **Mobile number is compulsory.** Every user must save a 10-digit mobile number in their Profile before they can use the app — without one, the app keeps them on the Profile page. The other party needs it to contact them after a match.
 - **HODs log in with a password** — see the HOD login section below.
 
 Only USN-format college emails are accepted, checked **before** Supabase is called:
