@@ -104,7 +104,7 @@ const toSnakePatch = (patch) => {
   for (const k of Object.keys(patch)) if (map[k] !== undefined) out[map[k]] = patch[k];
   return out;
 };
-const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: r.name || "", mobile: r.mobile || "", role: isHodEmail(r.email) ? "hod" : "student" } : null;
+const mapProfile = (r) => r ? { uid: r.id, email: r.email, usn: r.usn, department: r.department, branchCode: r.branch_code, year: r.year, name: isHodEmail(r.email) ? r.department : (r.name || ""), mobile: r.mobile || "", role: isHodEmail(r.email) ? "hod" : "student" } : null; // HODs show only their department name after login — never "HOD"
 const mapFound = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, placeFound: r.place_found, dateFound: r.date_found || "", collectDept: r.collect_dept, status: r.status, photoUrl: r.photo_url || "", finderUsn: r.finder_usn, finderName: r.finder_name || "", uploaderName: r.uploader_name || "", uploaderUid: r.uploader_uid });
 const mapComplaint = (r) => ({ id: r.id, itemName: r.item_name, category: r.category, ownerUsn: r.owner_usn, ownerUid: r.owner_uid, foundItemId: r.found_item_id, matchStatus: r.match_status, itemStatus: r.item_status, date: (r.created_at || "").slice(0, 10) });
 const mapMatch = (r) => ({ id: r.id, complaintId: r.complaint_id, foundItemId: r.found_item_id, ownerUid: r.owner_uid, ownerUsn: r.owner_usn, finderUid: r.finder_uid, finderUsn: r.finder_usn, status: r.status });
@@ -121,7 +121,7 @@ const DB = {
         const meta = data.user.user_metadata || {};
         const hod = hodFromEmail(email);
         const row = hod
-          ? { id: data.user.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: "HOD — " + hod.department, mobile: "" }
+          ? { id: data.user.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: hod.department, mobile: "" }
           : (() => { const v = validateCollegeEmailAndUsn(email, usn); if (!v.ok) throw new Error("Profile not found. Please create an account first."); return { id: data.user.id, email, usn, department: v.department, branch_code: v.branchCode, year: v.year, name: meta.full_name || meta.name || "", mobile: "" }; })();
         const { error: ierr } = await supabase.from("users").insert(row);
         if (ierr) throw new Error("Profile not found. Please create an account first.");
@@ -451,8 +451,8 @@ function showView(name) {
   window.scrollTo(0, 0);
   if (name === "upload" && currentUser?.role === "hod") {
     // HOD uploads as the department, not as a student.
-    $("upFinder").value = "HOD, " + currentUser.department + " Dept";
-    $("upUploader").value = "HOD, " + currentUser.department + " Dept";
+    $("upFinder").value = currentUser.department + " Dept";
+    $("upUploader").value = currentUser.department + " Dept";
     $("upFinderUsn").value = currentUser.usn;
     $("upDept").value = HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department;
   }
@@ -669,7 +669,7 @@ async function renderProfile() {
   $("profileForm").hidden = !!u.mobile;
   $("editProfileToggle").textContent = $("profileForm").hidden ? "Edit Profile" : "Close";
   $("profileDetails").innerHTML = u.role === "hod"
-    ? `<p><b>Role:</b> HOD — ${esc(u.department)} Department</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
+    ? `<p><b>Department:</b> ${esc(u.department)}</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
     : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
   $("pfName").value = u.name || ""; $("pfMobile").value = u.mobile || "";
   const found = await DB.listFoundPublic();
@@ -750,7 +750,7 @@ async function handleSupabaseUser(authUser) {
   if (hod) {
     let profile = await DB.getProfile(authUser.id);
     if (!profile) {
-      const row = { id: authUser.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: "HOD — " + hod.department, mobile: "" };
+      const row = { id: authUser.id, email: hod.email, usn: hod.usn, department: hod.department, branch_code: hod.branchCode, year: "", name: hod.department, mobile: "" };
       const { error } = await supabase.from("users").insert(row);
       profile = error ? mapProfile(row) : (await DB.getProfile(authUser.id)) || mapProfile(row);
     }
