@@ -186,7 +186,6 @@
       <h2 id="profileName" style="margin-top:8px">—</h2>
       <p class="muted" id="profileSub"></p>
     </div>
-    <div class="card" id="profileMobileNotice" hidden style="border:2px solid var(--orange);background:#FFF3E6"><b>📱 Mobile number is compulsory.</b> Add your 10-digit mobile number below to continue using LostLink — the other party needs it to contact you after a match.</div>
     <div class="card" id="profileDetails"></div>
     <div class="counts">
       <div class="card"><b id="countFound">0</b>Found</div>
@@ -196,7 +195,8 @@
     <div class="card" id="hodApprovals" hidden></div>
     <div class="card" id="myComplaintsBox" hidden></div>
     <div class="card"><h3>Edit Profile</h3>
-      <form id="profileForm" novalidate>
+      <button class="btn btn-secondary" id="editProfileToggle" type="button" style="width:100%">Edit Profile</button>
+      <form id="profileForm" novalidate hidden>
         <div class="field"><label for="pfName">Full name</label><input id="pfName"><div class="error" id="errPfName"></div></div>
         <div class="field"><label for="pfMobile">Mobile number * (compulsory)</label><input id="pfMobile" type="tel" maxlength="10" placeholder="10 digits"><div class="error" id="errPfMobile"></div></div>
         <p class="note">Mobile number is compulsory — you can't use the app until it is saved. USN, college email, department, branch code and year are locked — these come from your college USN email and cannot be changed.</p>

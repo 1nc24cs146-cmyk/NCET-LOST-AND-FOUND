@@ -664,7 +664,10 @@ async function renderProfile() {
   $("profileAvatar").textContent = (u.name || u.usn).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   $("profileName").textContent = u.name || "Not added yet — tap Edit Profile";
   $("profileSub").textContent = `${u.usn} • ${u.department} (${u.branchCode.toUpperCase()})`;
-  $("profileMobileNotice").hidden = !!u.mobile; // compulsory mobile — the notice stays until one is saved
+  // The edit form opens by itself when the mobile is missing (compulsory),
+  // otherwise it stays behind the Edit Profile button.
+  $("profileForm").hidden = !!u.mobile;
+  $("editProfileToggle").textContent = $("profileForm").hidden ? "Edit Profile" : "Close";
   $("profileDetails").innerHTML = u.role === "hod"
     ? `<p><b>Role:</b> HOD — ${esc(u.department)} Department</p><p><b>Department email:</b> ${esc(u.email)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Workers hand found items to the department — post them from Upload, and accept or reject claims below.</p>`
     : `<p><b>USN:</b> ${esc(u.usn)}</p><p><b>College email:</b> ${esc(u.email)}</p><p><b>Department:</b> ${esc(u.department)} (${esc(u.branchCode.toUpperCase())})</p><p><b>Year of admission:</b> 20${esc(u.year)}</p><p><b>Mobile:</b> ${esc(u.mobile || "Not added yet — tap Edit Profile")}</p><p class="note">Mobile is visible only to you.</p>`;
@@ -962,6 +965,10 @@ async function boot() {
     setTimeout(() => showView("matches"), 600);
   });
 
+  $("editProfileToggle").addEventListener("click", () => {
+    const f = $("profileForm"); f.hidden = !f.hidden;
+    $("editProfileToggle").textContent = f.hidden ? "Edit Profile" : "Close";
+  });
   $("profileForm").addEventListener("submit", async (e) => {
     e.preventDefault(); setErr("errPfName",""); setErr("errPfMobile","");
     const name = $("pfName").value.trim(), mobile = $("pfMobile").value.trim();
