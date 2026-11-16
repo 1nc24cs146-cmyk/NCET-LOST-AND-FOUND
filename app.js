@@ -841,7 +841,6 @@ async function boot() {
     } catch (err) { setErr("errGoogle", err.message || "Google sign-in failed. Please try again."); }
   };
   $("googleLoginBtn").onclick = doGoogleLogin;
-  $("welcomeGoogleBtn").onclick = () => { showView("login"); doGoogleLogin(); };
 
   $("uploadForm").addEventListener("submit", async (e) => {
     e.preventDefault(); setErr("errUpload",""); $("okUpload").textContent = "";
