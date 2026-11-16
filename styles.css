@@ -150,8 +150,8 @@ button{touch-action:manipulation}
 body.has-nav .container{padding-bottom:92px}
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;background:var(--navy);border-top:2px solid var(--orange);padding-bottom:env(safe-area-inset-bottom,0)}
 .bottom-nav[hidden]{display:none}
-.bottom-nav button{flex:1;background:none;border:0;color:#cbd5e1;padding:10px 2px 8px;font-size:18px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px}
-.bottom-nav button span{font-size:11px}
+.bottom-nav button{flex:1;background:none;border:0;color:#cbd5e1;padding:14px 2px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:48px}
+.bottom-nav button span{font-size:14px}
 .bottom-nav button.active{color:var(--orange)}
 @media (max-width:640px){
   .field input,.field select,.field textarea,.search-row input{font-size:16px;min-height:48px}

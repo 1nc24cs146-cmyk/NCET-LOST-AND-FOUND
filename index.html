@@ -217,11 +217,11 @@
 (function(){var h=document.querySelector('.hero-dark');if(!h)return;var fine=window.matchMedia('(pointer:fine)').matches;if(!fine)return;h.addEventListener('pointermove',function(e){var r=h.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;h.style.transform='rotateY('+(x*3).toFixed(2)+'deg) rotateX('+(-y*2).toFixed(2)+'deg)';});h.addEventListener('pointerleave',function(){h.style.transform='';});})();
 </script>
 <nav class="bottom-nav" id="bottomNav" hidden>
-  <button type="button" data-view="home" onclick="window.__goView('home')">🏠<span>Home</span></button>
-  <button type="button" data-view="upload" onclick="window.__goView('upload')">➕<span>Found</span></button>
-  <button type="button" data-view="complaint" onclick="window.__goView('complaint')">🔍<span>Lost</span></button>
-  <button type="button" data-view="matches" onclick="window.__goView('matches')">🤝<span>Matches</span></button>
-  <button type="button" data-view="profile" onclick="window.__goView('profile')">👤<span>Profile</span></button>
+  <button type="button" data-view="home" onclick="window.__goView('home')"><span>Home</span></button>
+  <button type="button" data-view="upload" onclick="window.__goView('upload')"><span>Found</span></button>
+  <button type="button" data-view="complaint" onclick="window.__goView('complaint')"><span>Lost</span></button>
+  <button type="button" data-view="matches" onclick="window.__goView('matches')"><span>Matches</span></button>
+  <button type="button" data-view="profile" onclick="window.__goView('profile')"><span>Profile</span></button>
 </nav>
 </body>
 </html>
