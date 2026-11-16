@@ -363,19 +363,22 @@ async function confirmMatch(m, f) {
     const fPriv = await DB.getPrivate("found", m.foundItemId, m.finderUid); if (fPriv?.mobile) finderMobile = fPriv.mobile;
   } catch (e) { console.warn("Contact details failed to load:", e); }
   const details = `<br><br><b>Item:</b> ${f ? f.itemName : "your item"} (${f ? f.category : ""}) — found at ${f ? f.placeFound || "" : ""}, collect from ${f ? f.collectDept || "" : ""} department.<br><b>Owner:</b> ${ownerName} (${m.ownerUsn})${ownerMobile ? `, mobile ${ownerMobile}` : ""}<br><b>Finder:</b> ${finderName} (${m.finderUsn})${finderMobile ? `, mobile ${finderMobile}` : ""}`;
+  // WhatsApp: the same details, pre-filled in a message — tap the link in the mail to send them on WhatsApp.
+  const waText = `LostLink — NCET: Your item has been matched.\nItem: ${f ? f.itemName : "your item"} (${f ? f.category : ""}) — found at ${f ? f.placeFound || "" : ""}, collect from ${f ? f.collectDept || "" : ""} department.\nOwner: ${ownerName} (${m.ownerUsn})${ownerMobile ? `, mobile ${ownerMobile}` : ""}\nFinder: ${finderName} (${m.finderUsn})${finderMobile ? `, mobile ${finderMobile}` : ""}`;
+  const waLink = (mobile) => mobile ? `<br><br><a href="https://wa.me/91${mobile}?text=${encodeURIComponent(waText)}">Message on WhatsApp</a>` : "";
   if (isHodItem) {
     await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed" });
     sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-      mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.${details}`));
+      mailWrap("Match confirmed — waiting for HOD", `You confirmed the match. The HOD of the ${f ? f.collectDept : ""} department will verify it and hand it over — the item will show <b>Delivered to Owner</b> once they accept.${details}${waLink(finderMobile)}`));
     sendMail(usnToEmail(m.finderUsn), "LostLink: a student confirmed your department item",
-      mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.${details}`));
+      mailWrap("Claim waiting for your approval", `A student confirmed that the <b>${f ? f.itemName : "item"}</b> is theirs. Please open your Profile in LostLink to accept or reject the handover.${details}${waLink(ownerMobile)}`));
   } else {
     await DB.updateFound(m.foundItemId, { status: "Delivered to Owner" });
     await DB.updateComplaint(m.complaintId, { matchStatus: "Confirmed", itemStatus: "Delivered to Owner" });
     sendMail(usnToEmail(m.ownerUsn), "LostLink: match confirmed for " + (f ? f.itemName : "your item"),
-      mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.${details}`));
+      mailWrap("Match confirmed — Delivered to Owner", `You confirmed the match. The item is now marked <b>Delivered to Owner</b> — please collect it from the ${f ? f.collectDept : ""} department.${details}${waLink(finderMobile)}`));
     sendMail(usnToEmail(m.finderUsn), "LostLink: the owner confirmed your found item",
-      mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.${details}`));
+      mailWrap("Match confirmed — Delivered to Owner", `The owner confirmed that the item you found is theirs. It is now marked <b>Delivered to Owner</b> — please hand it over at the ${f ? f.collectDept : ""} department.${details}${waLink(ownerMobile)}`));
   }
 }
 
@@ -577,6 +580,20 @@ async function renderMatches() {
         // The other person's details are NEVER shown in the app — only in the
         // confirmation mail on Gmail, after the owner confirms the match.
         html += `<p class="note">Confirmed — each other's details (name, USN, mobile, item info) are in your confirmation mail on Gmail. Please check your inbox.</p>`;
+        // WhatsApp: one button that opens a chat with the other person, with both
+        // sides' details pre-filled in the message. No details are shown in the app.
+        const ownerPriv = await DB.getPrivate("complaint", m.complaintId, currentUser.uid);
+        const finderPriv = await DB.getPrivate("found", m.foundItemId, currentUser.uid);
+        const ownerMobile = ownerPriv?.mobile || ""; const finderMobile = finderPriv?.mobile || "";
+        const ownerProfile = await DB.getProfile(m.ownerUid).catch(() => null);
+        const finderProfile = await DB.getProfile(m.finderUid).catch(() => null);
+        const ownerName = ownerProfile?.name || m.ownerUsn;
+        const finderName = finderProfile?.name || f.finderName || m.finderUsn;
+        const otherMobile = isOwner ? finderMobile : ownerMobile;
+        if (otherMobile) {
+          const waText = `LostLink — NCET: Your item has been matched.\nItem: ${f.itemName} (${f.category}) — found at ${f.placeFound || ""}, collect from ${f.collectDept || ""} department.\nOwner: ${ownerName} (${m.ownerUsn}), mobile ${ownerMobile}\nFinder: ${finderName} (${m.finderUsn}), mobile ${finderMobile}`;
+          html += `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" href="https://wa.me/91${otherMobile}?text=${encodeURIComponent(waText)}">Message on WhatsApp</a>`;
+        }
         if (isOwner && f.status !== "Delivered to Owner")
           html += (f.finderUsn || "").startsWith("HOD-")
             ? `<p class="note">Confirmed — waiting for the HOD of the ${esc(f.collectDept || "")} department to accept the handover.</p>`
