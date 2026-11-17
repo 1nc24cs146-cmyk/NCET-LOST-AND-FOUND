@@ -926,10 +926,19 @@ async function boot() {
     if (cat === "Others" && !itemName) { setErr("errUpCategory", "Type the item name for Others."); ok = false; }
     if (!ok) return;
     const photoFile = selectedPhoto || $("upPhoto").files[0] || $("upPhotoCamera").files[0] || null;
-    const id = await DB.createFound(
-      { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
-      { mobile: isHod ? (currentUser.mobile || "") : g("upMobile"), description: g("upDesc") }, photoFile);
-    await runMatchingForFound(id);
+    // If anything fails (network, database, photo), show the error instead of
+    // silently doing nothing — before this fix a failed upload showed no error
+    // and no success message, so it looked like the app just did not take it.
+    let id;
+    try {
+      id = await DB.createFound(
+        { itemName, category: cat, placeFound: g("upPlace"), collectDept: isHod ? (HOD_COLLECT_DEPT[currentUser.branchCode] || currentUser.department) : $("upDept").value, status: "Pending", finderUsn, finderName: isHod ? currentUser.department + " Dept" : g("upFinder"), uploaderName: isHod ? currentUser.department + " Dept" : g("upUploader"), uploaderUid: currentUser.uid, photoUrl: "" },
+        { mobile: isHod ? (currentUser.mobile || "") : g("upMobile"), description: g("upDesc") }, photoFile);
+      await runMatchingForFound(id);
+    } catch (err) {
+      setErr("errUpload", "Upload failed: " + (err.message || "please check your connection and try again."));
+      return;
+    }
     $("okUpload").textContent = "Item uploaded successfully.";
     e.target.reset(); $("upOthersWrap").hidden = true; selectedPhoto = null; $("upPhotoPreview").innerHTML = "";
     setTimeout(() => showView("home"), 600);
@@ -952,18 +961,26 @@ async function boot() {
     const mine = await DB.listMyComplaints(currentUser.uid);
     const dup = mine.find((c) => c.itemStatus !== "Delivered to Owner" && ((foundId && c.foundItemId === foundId) || (!foundId && norm(c.itemName) === norm(itemName) && c.category === cat)));
     if (dup) { setErr("errComplaint", `You already raised a complaint for "${dup.itemName}". Check My Matches — you cannot raise another one for the same item while it is still open.`); return; }
-    const id = await DB.createComplaint(
-      { itemName, category: cat, ownerUsn: g("cpUsn").toUpperCase() || currentUser.usn, ownerUid: currentUser.uid, foundItemId: foundId, matchStatus: "Waiting for Match", itemStatus: "Pending" },
-      { mobile: g("cpMobile"), description: g("cpDesc") });
-    // If the owner picked a found item, create a Possible Match directly.
-    if (foundId) {
-      const f = (await DB.listFoundPublic()).find((x) => x.id === foundId);
-      if (f && f.category === cat) {
-        await DB.addMatch({ complaintId: id, foundItemId: foundId, ownerUid: currentUser.uid, ownerUsn: currentUser.usn, finderUid: f.uploaderUid, finderUsn: f.finderUsn, status: "Possible Match", createdAt: Date.now() });
-        await DB.updateComplaint(id, { matchStatus: "Possible Match" });
+    // Same silent-failure fix as the upload form: if the complaint save or the
+    // matching step fails, show the error instead of doing nothing at all.
+    let id;
+    try {
+      id = await DB.createComplaint(
+        { itemName, category: cat, ownerUsn: g("cpUsn").toUpperCase() || currentUser.usn, ownerUid: currentUser.uid, foundItemId: foundId, matchStatus: "Waiting for Match", itemStatus: "Pending" },
+        { mobile: g("cpMobile"), description: g("cpDesc") });
+      // If the owner picked a found item, create a Possible Match directly.
+      if (foundId) {
+        const f = (await DB.listFoundPublic()).find((x) => x.id === foundId);
+        if (f && f.category === cat) {
+          await DB.addMatch({ complaintId: id, foundItemId: foundId, ownerUid: currentUser.uid, ownerUsn: currentUser.usn, finderUid: f.uploaderUid, finderUsn: f.finderUsn, status: "Possible Match", createdAt: Date.now() });
+          await DB.updateComplaint(id, { matchStatus: "Possible Match" });
+        }
       }
+      await runMatchingForComplaint(id);
+    } catch (err) {
+      setErr("errComplaint", "Complaint failed: " + (err.message || "please check your connection and try again."));
+      return;
     }
-    await runMatchingForComplaint(id);
     // Email 1: complaint raised — the owner gets a mail right away.
     sendMail(currentUser.email || usnToEmail(currentUser.usn), "LostLink: complaint raised for " + itemName,
       mailWrap("Complaint raised", `Your complaint for <b>${itemName}</b> (${cat}) has been raised on LostLink. We will mail you again the moment a found item matches it.`));
